@@ -1,0 +1,120 @@
+﻿@page "/"
+@inject MauiApp1.Services.IDialogService dialogService
+
+<MudText Typo="Typo.h4" Align="Align.Center" class="mb-3">
+        Text Compare Pro
+</MudText>
+<MudTextField T="string" Label="Text 1" Variant="Variant.Text" @bind-Value="@textList[0]" Lines="5" />
+<MudTextField T="string" Label="Text 2" Variant="Variant.Text" @bind-Value="@textList[1]" Lines="5" />
+<div class="d-flex flex-wrap">
+   <MudCheckBox Label="Compare" @bind-Checked="@compare" Color="Color.Primary"></MudCheckBox>
+    <MudCheckBox Label="Ignore Case" @bind-Checked="@ignoreCase" Color="Color.Secondary"></MudCheckBox>
+    <MudCheckBox Label="Compare Length" @bind-Checked="@lengthCompare" Color="Color.Warning"></MudCheckBox>
+    <MudCheckBox Label="Contains" @bind-Checked="@contains" Color="Color.Primary"></MudCheckBox>
+    <MudCheckBox Label="Replace" @bind-Checked="@replace" Color="Color.Secondary"></MudCheckBox>
+    <MudCheckBox Label="To Upper" @bind-Checked="@toUpper" Color="Color.Warning"></MudCheckBox>
+    <MudCheckBox Label="To Lower" @bind-Checked="@toLower" Color="Color.Tertiary"></MudCheckBox>
+</div>
+@if (contains)
+{
+    <MudTextField class="mt-3" T="string" Label="Contains what?" @bind-Value="@containsText" Variant="Variant.Text" Lines="2" />
+}
+@if (replace)
+{
+    <MudTextField class="mt-3" T="string" Label="Replace" @bind-Value="@replaceText" Variant="Variant.Text" Lines="2" />
+    <MudTextField class="mt-3" T="string" Label="Replace with?" @bind-Value="@replaceWithText" Variant="Variant.Text" Lines="2" />
+}
+<MudNumericField Label="Process on text number" Min="1" Max="2" @bind-Value="@index"></MudNumericField>
+<div class="d-flex justify-center mt-3 mb-3">
+<MudButton class="mb-3" Disabled="@processing" OnClick="Process" Variant="Variant.Filled" Color="Color.Primary">
+    @if (processing)
+    {
+        <MudProgressCircular Class="ms-n1 mr-2" Size="Size.Small" Indeterminate="true"/>
+        <MudText Class="ms-2">Processing</MudText>
+    }
+    else
+    {
+        <MudText>Process</MudText>
+    }
+</MudButton>
+</div>
+<MudDivider />
+<MudCard class="mt-3 mb-3">
+    <MudCardContent>
+        <MudText Typo="Typo.h5">Results - These values update when you click process</MudText>
+        <MudText Typo="Typo.h6">Process count: @processCount</MudText>
+        <MudDivider class="mb-2 mt-2"/>
+        <MudText>Compare Result: @compareResult</MudText>
+        <MudText>Contains Result: @containsResult</MudText>
+        <MudText>Length Compare Result: @lengthCompareResult</MudText>
+    </MudCardContent>
+</MudCard>
+@code{
+    List<string> textList = new();
+    bool compare = true;
+    bool ignoreCase = false;
+    bool processing = false;
+    bool compareResult = false;
+    bool lengthCompare = false;
+    bool lengthCompareResult = false;
+    bool contains = false;
+    string containsText = string.Empty;
+    bool containsResult = false;
+    int index = 1;
+    bool replace = false;
+    string replaceText = string.Empty;
+    string replaceWithText = string.Empty;
+    bool toUpper = false;
+    bool toLower = false;
+    ulong processCount = 0;
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        textList.Add("Enter text - 1");
+        textList.Add("Enter text - 2");
+    }
+    private async Task Process()
+    {
+        processing = true;
+        processCount++;
+        try
+        {
+            if (compare)
+            {
+                compareResult = textList[0].Equals(textList[1], ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+            }
+            if (lengthCompare)
+            {
+                lengthCompareResult = textList[0].Length == textList[1].Length;
+            }
+            if (contains)
+            {
+                //text 1 only
+                containsResult = textList[index-1].Contains(containsText);
+            }
+            if (replace)
+            {
+                textList[index-1] = textList[index-1].Replace(replaceText, replaceWithText, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+            }
+            if (toUpper)
+            {
+                textList[index-1] = textList[index - 1].ToUpper();
+            }
+            if (toLower)
+            {
+                textList[index-1] = textList[index - 1].ToLower();
+            }
+            //if (toUpperInVariant)
+            //{
+            //    textList[toUpperIndex - 1].ToUpperInvariant();
+            //}
+            //StateHasChanged();
+        }
+        catch (Exception e)
+        {
+            await dialogService.DisplayConfirmAsync("Error", e.Message);
+        }
+        processing = false;
+    }
+}
+

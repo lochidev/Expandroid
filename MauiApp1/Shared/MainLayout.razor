@@ -1,0 +1,35 @@
+﻿@inherits LayoutComponentBase
+
+<MudThemeProvider IsDarkMode="true" Theme="MyCustomTheme"/>
+<MudDialogProvider/>
+<MudSnackbarProvider/>
+
+<MudLayout>
+    <MudMainContent Class="pt-0 mb-3">
+    <MudContainer Class="mt-3" MaxWidth="MaxWidth.Medium">
+            @Body
+    </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    bool _drawerOpen = false;
+    MudTheme MyCustomTheme = new MudTheme()
+        {
+            PaletteDark = new PaletteDark()
+            {
+                //AppbarBackground = Colors.Indigo.Darken4,
+                //DrawerBackground = Color
+            },
+
+            LayoutProperties = new LayoutProperties()
+            {
+                DrawerWidthLeft = "260px",
+                DrawerWidthRight = "300px"
+            }
+        };
+    void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}
