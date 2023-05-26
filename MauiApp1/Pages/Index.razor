@@ -4,8 +4,10 @@
 <MudText Typo="Typo.h4" Align="Align.Center" class="mb-3">
         Text Tools Pro
 </MudText>
-<MudTextField T="string" Label="Text 1" Variant="Variant.Text" @bind-Value="@textList[0]" Lines="5" />
-<MudTextField T="string" Label="Text 2" Variant="Variant.Text" @bind-Value="@textList[1]" Lines="5" />
+<MudTextField T="string" HelperText="Length" Counter="textList[0].Length" Label="Text 1" Variant="Variant.Text" @bind-Value="@textList[0]" Lines="5" />
+<MudTextField T="string" HelperText="Length" Counter="textList[1].Length" Label="Text 2" Variant="Variant.Text" @bind-Value="@textList[1]" Lines="5" />
+<MudTabs @ref="@Tabs" class="mt-3" Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-3">
+<MudTabPanel Text="Basic">
 <div class="d-flex flex-wrap">
    <MudCheckBox Label="Compare" @bind-Checked="@compare" Color="Color.Primary"></MudCheckBox>
     <MudCheckBox Label="Ignore Case" @bind-Checked="@ignoreCase" Color="Color.Secondary"></MudCheckBox>
@@ -15,18 +17,37 @@
     <MudCheckBox Label="To Upper" @bind-Checked="@toUpper" Color="Color.Warning"></MudCheckBox>
     <MudCheckBox Label="To Lower" @bind-Checked="@toLower" Color="Color.Tertiary"></MudCheckBox>
 </div>
+</MudTabPanel>
+<MudTabPanel Text="Discord (& Markdown)">
+<div class="d-flex flex-wrap">
+    <MudCheckBox Label="Bold" @bind-Checked="@makeBold" Color="Color.Primary"></MudCheckBox>
+    <MudCheckBox Label="Italic" @bind-Checked="@makeItalic" Color="Color.Secondary"></MudCheckBox>
+    <MudCheckBox Label="Underline" @bind-Checked="@makeUnderline" Color="Color.Warning"></MudCheckBox>
+    <MudCheckBox Label="Strikethrough" @bind-Checked="@makeStrike" Color="Color.Primary"></MudCheckBox>
+    <MudCheckBox Label="Spoilers" @bind-Checked="@makeSpoiler" Color="Color.Secondary"></MudCheckBox>
+    <MudCheckBox Label="Code Block" @bind-Checked="@makeCode" Color="Color.Warning"></MudCheckBox>
+    <MudCheckBox Label="Quote" @bind-Checked="@makeQuote" Color="Color.Tertiary"></MudCheckBox>
+    <MudCheckBox Label="Add timestamp" @bind-Checked="@addTimeStamp" Color="Color.Tertiary"></MudCheckBox>
+</div>
+</MudTabPanel>
+</MudTabs>
 @if (contains)
 {
     <MudTextField class="mt-3" T="string" Label="Contains what?" @bind-Value="@containsText" Variant="Variant.Text" Lines="2" />
+}
+@if (addTimeStamp)
+{
+    <MudDatePicker Class="mt-3" Label="Pick a date" @bind-Date="date"/>
+    <MudTimePicker Class="mt-3" Label="Pick a time" @bind-Time="timeSpan"/>
 }
 @if (replace)
 {
     <MudTextField class="mt-3" T="string" Label="Replace" @bind-Value="@replaceText" Variant="Variant.Text" Lines="2" />
     <MudTextField class="mt-3" T="string" Label="Replace with?" @bind-Value="@replaceWithText" Variant="Variant.Text" Lines="2" />
 }
-<MudNumericField Label="Process on text number" Min="1" Max="2" @bind-Value="@index"></MudNumericField>
+<MudNumericField Class="mt-3" Label="Process on text number" Min="1" Max="2" @bind-Value="@index"></MudNumericField>
 <div class="d-flex justify-center mt-3 mb-3">
-    <MudButtonGroup class="mb-3" Variant="Variant.Filled" Color="Color.Primary">
+    <MudButtonGroup class="mb-3" Variant="Variant.Outlined" Color="Color.Primary">
 <MudButton Disabled="@processing" OnClick="Process" >
     @if (processing)
     {
@@ -38,8 +59,8 @@
         <MudText>Process</MudText>
     }
 </MudButton>
-<MudButton OnClick="async () => CopyTextAsync(1)">Copy text 1</MudButton>
-<MudButton OnClick="async () => CopyTextAsync(2)">Copy text 2</MudButton>
+<MudButton OnClick="async () => await CopyTextAsync(1)">Copy text 1</MudButton>
+<MudButton OnClick="async () => await CopyTextAsync(2)">Copy text 2</MudButton>
 
 </MudButtonGroup>
 </div>
@@ -49,9 +70,12 @@
         <MudText Typo="Typo.h5">Results - These values update when you click process</MudText>
         <MudText Typo="Typo.h6">Process count: @processCount</MudText>
         <MudDivider class="mb-2 mt-2"/>
-        <MudText>Compare Result: @compareResult</MudText>
-        <MudText>Contains Result: @containsResult</MudText>
-        <MudText>Length Compare Result: @lengthCompareResult</MudText>
+        <div class="d-flex flex-wrap">
+
+        <MudCheckBox Label="Is Text Equal" ReadOnly="true" Checked="@compareResult" Color="Color.Success"></MudCheckBox>
+        <MudCheckBox Label="Contains the word specified" ReadOnly="true" Checked="@containsResult" Color="Color.Primary"></MudCheckBox>
+        <MudCheckBox Label="Is Length Equal" ReadOnly="true" Checked="@lengthCompareResult" Color="Color.Warning"></MudCheckBox>
+        </div>
     </MudCardContent>
 </MudCard>
 @code{
@@ -72,6 +96,17 @@
     bool toUpper = false;
     bool toLower = false;
     ulong processCount = 0;
+    public MudTabs Tabs;
+    bool makeBold = true;
+    bool makeItalic = false;
+    bool makeStrike = false;
+    bool makeCode = false;
+    bool makeQuote = false;
+    bool makeUnderline = false;
+    bool makeSpoiler = false;
+    bool addTimeStamp = false;
+    DateTime? date;
+    TimeSpan? timeSpan;
     protected override void OnInitialized()
     {
         base.OnInitialized();
@@ -89,36 +124,69 @@
         processCount++;
         try
         {
-            if (compare)
+            if (Tabs.ActivePanelIndex == 0)
             {
-                compareResult = textList[0].Equals(textList[1], ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+                if (compare)
+                {
+                    compareResult = textList[0].Equals(textList[1], ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+                }
+                if (lengthCompare)
+                {
+                    lengthCompareResult = textList[0].Length == textList[1].Length;
+                }
+                if (contains)
+                {
+                    //text 1 only
+                    containsResult = textList[index - 1].Contains(containsText, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+                }
+                if (replace)
+                {
+                    textList[index - 1] = textList[index - 1].Replace(replaceText, replaceWithText, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+                }
+                if (toUpper)
+                {
+                    textList[index - 1] = textList[index - 1].ToUpper();
+                }
+                if (toLower)
+                {
+                    textList[index - 1] = textList[index - 1].ToLower();
+                }
             }
-            if (lengthCompare)
+            else
             {
-                lengthCompareResult = textList[0].Length == textList[1].Length;
+                if(makeBold)
+                {
+                    textList[index - 1] = "**" + textList[index - 1] + "**";
+                }
+                if(makeItalic)
+                {
+                    textList[index - 1] = "*" + textList[index - 1] + "*";
+                }
+                if(makeUnderline)
+                {
+                    textList[index - 1] = "__" + textList[index - 1] + "__";
+                }
+                if(makeStrike)
+                {
+                    textList[index - 1] = "~~" + textList[index - 1] + "~~";
+                }
+                if(makeSpoiler)
+                {
+                    textList[index - 1] = "||" + textList[index - 1] + "||";
+                }
+                if(makeCode)
+                {
+                    textList[index - 1] = "```" + textList[index - 1] + "```";
+                }
+                if(makeQuote)
+                {
+                    textList[index - 1] = ">>>" + textList[index - 1];
+                }
+                if (addTimeStamp)
+                {
+                    textList[index - 1] += " <t:" + ((DateTimeOffset)(date + timeSpan)).ToUnixTimeSeconds() + ":f>";
+                }
             }
-            if (contains)
-            {
-                //text 1 only
-                containsResult = textList[index-1].Contains(containsText, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-            }
-            if (replace)
-            {
-                textList[index-1] = textList[index-1].Replace(replaceText, replaceWithText, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-            }
-            if (toUpper)
-            {
-                textList[index-1] = textList[index - 1].ToUpper();
-            }
-            if (toLower)
-            {
-                textList[index-1] = textList[index - 1].ToLower();
-            }
-            //if (toUpperInVariant)
-            //{
-            //    textList[toUpperIndex - 1].ToUpperInvariant();
-            //}
-            //StateHasChanged();
         }
         catch (Exception e)
         {
