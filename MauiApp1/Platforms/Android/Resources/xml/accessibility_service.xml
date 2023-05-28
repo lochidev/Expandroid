@@ -6,4 +6,5 @@
     android:accessibilityFlags="flagReportViewIds"
     android:canRetrieveWindowContent="true"
     android:notificationTimeout="100"
+	android:description="@string/service_description"
  />

@@ -6,7 +6,7 @@
 
 <MudLayout>
     <MudMainContent Class="pt-0 mb-3">
-    <MudContainer Class="mt-3" MaxWidth="MaxWidth.Medium">
+    <MudContainer class="mt-3 pa-2">
             @Body
     </MudContainer>
     </MudMainContent>
@@ -26,7 +26,14 @@
             {
                 DrawerWidthLeft = "260px",
                 DrawerWidthRight = "300px"
+            },
+            Typography = new Typography()
+        {
+            H4 = new H4()
+            {
+                FontWeight = 600,
             }
+        }
         };
     void DrawerToggle()
     {

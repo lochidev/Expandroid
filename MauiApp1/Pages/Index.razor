@@ -1,12 +1,15 @@
 ﻿@page "/"
+@using CommunityToolkit.Mvvm.Messaging;
+@using MauiApp1.Models;
+@using System.Text.Json;
 @inject MauiApp1.Services.IDialogService dialogService
-
-<MudText Typo="Typo.h4" Align="Align.Center" class="mb-3">
+@inject ICheckIfActivated acService
+<MudText Typo="Typo.h4" Align="Align.Center"  class="mb-3">
         Text Tools Pro
 </MudText>
 <MudTextField T="string" HelperText="Length" Counter="textList[0].Length" Label="Text 1" Variant="Variant.Text" @bind-Value="@textList[0]" Lines="5" />
 <MudTextField T="string" HelperText="Length" Counter="textList[1].Length" Label="Text 2" Variant="Variant.Text" @bind-Value="@textList[1]" Lines="5" />
-<MudTabs @ref="@Tabs" class="mt-3" Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-3">
+<MudTabs @ref="@Tabs" class="mt-3" Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
 <MudTabPanel Text="Basic">
 <div class="d-flex flex-wrap">
    <MudCheckBox Label="Compare" @bind-Checked="@compare" Color="Color.Primary"></MudCheckBox>
@@ -30,6 +33,37 @@
     <MudCheckBox Label="Add timestamp" @bind-Checked="@addTimeStamp" Color="Color.Tertiary"></MudCheckBox>
 </div>
 </MudTabPanel>
+<MudTabPanel Text="Text Expander (Accessibility Service)">
+        @if (!canTextExpand)
+        {
+            <MudText class="mb-3">Please provide access to accessibility settings</MudText>
+            <MudButton Color="Color.Primary" Variant="Variant.Outlined" @onclick="OpenSettings">Open Settings</MudButton>
+        }
+        else {
+            <div class="d-flex justify-center">
+                <MudButton @onclick="SaveDictAsync" Color="Color.Success" Variant="Variant.Text">Make sure to save!</MudButton>
+            </div>
+            <MudText class="mb-3">Keywords</MudText>
+            <div class="d-flex">
+                <MudTextField class="mr-1" Placeholder="t:omw" @bind-Value="currentExpandTuple.Item1" Label="Key" Variant="Variant.Outlined"></MudTextField>
+                <MudTextField class="mr-1" Placeholder="On my way" @bind-Value="currentExpandTuple.Item2" Label="Value" Variant="Variant.Outlined"></MudTextField>
+                <MudButton @onclick="async () => await AddItemAsync(new KeyValuePair<string, string>(currentExpandTuple.Item1, currentExpandTuple.Item2))" Color="Color.Primary" Variant="Variant.Text">Add</MudButton>
+            </div>
+            @if (dict is not null)
+                {
+                    @foreach (var item in dict)
+                    {
+                        <div class="d-flex mt-2">
+                        <MudTextField class="mr-1" Disabled="true" Value="item.Key"  Label="Key" Variant="Variant.Outlined"></MudTextField>
+                        <MudTextField class="mr-1" Disabled="true" Value="item.Value" Variant="Variant.Outlined"></MudTextField>
+                        <MudButton @onclick="async () => await RemoveItemAsync(item)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
+                        </div>
+                    }
+
+                }
+        }
+    </MudTabPanel>
+
 </MudTabs>
 @if (contains)
 {
@@ -67,14 +101,15 @@
 <MudDivider />
 <MudCard class="mt-3 mb-3">
     <MudCardContent>
-        <MudText Typo="Typo.h5">Results - These values update when you click process</MudText>
-        <MudText Typo="Typo.h6">Process count: @processCount</MudText>
+        <MudText Typo="Typo.h5">RESULTS</MudText>
+        <MudText Typo="Typo.h6">PROCESS COUNT: @processCount</MudText>
         <MudDivider class="mb-2 mt-2"/>
         <div class="d-flex flex-wrap">
 
         <MudCheckBox Label="Is Text Equal" ReadOnly="true" Checked="@compareResult" Color="Color.Success"></MudCheckBox>
         <MudCheckBox Label="Contains the word specified" ReadOnly="true" Checked="@containsResult" Color="Color.Primary"></MudCheckBox>
         <MudCheckBox Label="Is Length Equal" ReadOnly="true" Checked="@lengthCompareResult" Color="Color.Warning"></MudCheckBox>
+        <MudCheckBox Label="Can Text Expand" ReadOnly="true" Checked="@canTextExpand" Color="Color.Warning"></MudCheckBox>
         </div>
     </MudCardContent>
 </MudCard>
@@ -105,13 +140,95 @@
     bool makeUnderline = false;
     bool makeSpoiler = false;
     bool addTimeStamp = false;
+    bool canTextExpand = false;
     DateTime? date;
     TimeSpan? timeSpan;
+    (string, string) currentExpandTuple = (string.Empty, string.Empty);
+    private Dictionary<string, string> dict;
+    private string DictPath = Path.Combine(FileSystem.Current.CacheDirectory, "keywords.json");
     protected override void OnInitialized()
     {
         base.OnInitialized();
         textList.Add("Enter text - 1");
         textList.Add("Enter text - 2");
+        WeakReferenceMessenger.Default.Register<AcServiceMessage>(this, (r, m) =>
+        {
+            if(!canTextExpand){
+                foreach (var item in dict)
+                {
+                    SendMessage("Add", item);
+                }
+            }
+            canTextExpand = true;
+            StateHasChanged();
+        });
+        canTextExpand = acService.IsActivated();
+        if (File.Exists(DictPath))
+        {
+            using var stream = File.OpenRead(DictPath);
+            dict = JsonSerializer.Deserialize<Dictionary<string, string>>(stream);
+            if (canTextExpand)
+            {
+                foreach (var item in dict)
+                {
+                    SendMessage("Add", item);
+                }
+            }
+        }
+        else
+            dict = new();
+    }
+    private async Task AddItemAsync(KeyValuePair<string, string> item)
+    {
+        try
+        {
+        dict.Add(item.Key, item.Value);
+        SendMessage("Add", item);
+
+        }
+        catch (Exception e)
+        {
+            await dialogService.DisplayConfirmAsync("Error", "Please restart the app to ensure sync" + e.Message);
+        }
+    }
+    private async Task RemoveItemAsync(KeyValuePair<string, string> item)
+    {
+        try
+        {
+        dict.Remove(item.Key);
+        SendMessage("Remove", item);
+        }
+        catch (Exception e)
+        {
+            await dialogService.DisplayConfirmAsync("Error", "Please restart the app to ensure sync" + e.Message);
+        }
+    }
+    private async Task SaveDictAsync(){
+        try
+        {
+            var str = JsonSerializer.Serialize(dict);
+            await File.WriteAllTextAsync(DictPath, str);
+            await dialogService.DisplayConfirmAsync("Success!", "File saved successfully!");
+        }
+        catch (Exception e)
+        {
+            await dialogService.DisplayConfirmAsync("An error occurred!", e.Message);
+        }
+    }
+
+    private async void SendMessage(string cmd, KeyValuePair<string, string> value){
+        WeakReferenceMessenger.Default.Send(new AcServiceMessage((cmd, value)));
+    }
+    private async Task OpenSettings()
+    {
+        try
+        {
+            acService.OpenSettings();
+        }
+        catch (Exception e)
+        {
+            await dialogService.DisplayConfirmAsync("Error", e.Message);
+        }
     }
     private async Task CopyTextAsync(int n)
     {

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="service_description">Text Tools needs this to be turned on to provide the text expander feature!
+		IMPORTANT: Please note that turning this on will give our accessibility service the ability to replace all the keywords that you\'ve set up through our app!
+		All data collected through this service never leaves your device. No data is sent to the developer or third parties. Learn more at https://lochik.me/privacypolicy
+	</string>
+</resources>
