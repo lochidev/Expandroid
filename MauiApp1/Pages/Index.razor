@@ -36,7 +36,7 @@
 <MudTabPanel Text="Text Expander (Accessibility Service)">
         @if (!canTextExpand)
         {
-            <MudText class="mb-3">Please provide access to accessibility settings</MudText>
+            <MudText class="mb-3">Please provide access to the AccessibilityServices API in order to use this feature. Data collected through the API never leave your device. Providing access will give our accessibility service the ability to replace the keywords you set up with the expanded text, whenever you type on and Entry widget, both inside and outside our app!</MudText>
             <MudButton Color="Color.Primary" Variant="Variant.Outlined" @onclick="OpenSettings">Open Settings</MudButton>
         }
         else {
