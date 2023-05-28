@@ -216,7 +216,7 @@
         }
     }
 
-    private async void SendMessage(string cmd, KeyValuePair<string, string> value){
+    private void SendMessage(string cmd, KeyValuePair<string, string> value){
         WeakReferenceMessenger.Default.Send(new AcServiceMessage((cmd, value)));
     }
     private async Task OpenSettings()
