@@ -8,6 +8,6 @@ namespace MauiApp1.Services
 {
     internal interface IDialogService
     {
-        Task DisplayConfirmAsync(string title, string message);
+        Task<bool> DisplayConfirmAsync(string title, string message, string accept = "Ok", string cancel = null);
     }
 }

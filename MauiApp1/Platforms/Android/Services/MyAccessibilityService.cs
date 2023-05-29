@@ -59,23 +59,7 @@ public class MyAccessibilityService : AccessibilityService
         {
 
         }
-    }
-    public void performViewClick(AccessibilityNodeInfo nodeInfo)
-    {
-        if (nodeInfo == null)
-        {
-            return;
-        }
-        while (nodeInfo != null)
-        {
-            if (nodeInfo.Clickable)
-            {
-                nodeInfo.PerformAction(Android.Views.Accessibility.Action.Click);
-                break;
-            }
-            nodeInfo = nodeInfo.Parent;
-        }
-    }
+    }   
 
     public override void OnInterrupt()
     {

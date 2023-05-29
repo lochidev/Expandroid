@@ -8,9 +8,17 @@ namespace MauiApp1.Services
 {
     internal class DialogService : IDialogService
     {
-        public async Task DisplayConfirmAsync(string title, string message)
+        public async Task<bool> DisplayConfirmAsync(string title, string message, string accept = "Ok", string cancel = null)
         {
-            await Application.Current.MainPage.DisplayAlert(title, message, "Ok");
+            if (cancel is null)
+            {
+                await Application.Current.MainPage.DisplayAlert(title, message, accept);
+                return true;
+            }
+            else
+            {
+                return await Application.Current.MainPage.DisplayAlert(title, message, accept, cancel);
+            }
         }
     }
 }

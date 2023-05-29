@@ -1,4 +1,6 @@
-﻿using MauiApp1.Models;
+﻿using CommunityToolkit.Maui;
+using CommunityToolkit.Maui.Storage;
+using MauiApp1.Models;
 using MauiApp1.Services;
 using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
@@ -11,7 +13,7 @@ public static class MauiProgram
 	{
 		var builder = MauiApp.CreateBuilder();
 		builder
-			.UseMauiApp<App>()
+			.UseMauiApp<App>().UseMauiCommunityToolkit()
 			.ConfigureFonts(fonts =>
 			{
 				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
@@ -27,6 +29,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<ICheckIfActivated, CheckIfActivated>();
 #endif
         builder.Services.AddSingleton<IDialogService, DialogService>();
+        builder.Services.AddSingleton(FileSaver.Default);
+        builder.Services.AddSingleton(FilePicker.Default);
         return builder.Build();
 	}
 }

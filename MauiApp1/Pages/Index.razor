@@ -1,9 +1,13 @@
 ﻿@page "/"
+@using CommunityToolkit.Maui.Storage;
 @using CommunityToolkit.Mvvm.Messaging;
 @using MauiApp1.Models;
 @using System.Text.Json;
+@using System.Text;
 @inject MauiApp1.Services.IDialogService dialogService
 @inject ICheckIfActivated acService
+@inject IFileSaver fileSaver
+@inject IFilePicker filePicker
 <MudText Typo="Typo.h4" Align="Align.Center"  class="mb-3">
         Text Tools Pro
 </MudText>
@@ -36,12 +40,14 @@
 <MudTabPanel Text="Text Expander (Accessibility Service)">
         @if (!canTextExpand)
         {
-            <MudText class="mb-3">Please provide access to the AccessibilityServices API in order to use this feature. Data collected through the API never leave your device. Providing access will give our accessibility service the ability to replace the keywords you set up with the expanded text, whenever you type on an Entry widget, both inside and outside our app!</MudText>
-            <MudButton Color="Color.Primary" Variant="Variant.Outlined" @onclick="OpenSettings">Open Settings</MudButton>
+            <MudText class="mb-3">Please provide access to the AccessibilityServices API in order to use this feature. Data collected through the API never leaves your device. Providing access will give our accessibility service the ability to replace the keywords you set up with the expanded text, whenever you type on an Entry widget, both inside and outside our app!</MudText>
+            <MudButton Color="Color.Primary" Variant="Variant.Outlined" @onclick="OpenSettings">Consent And Open Settings</MudButton>
         }
         else {
             <div class="d-flex justify-center">
                 <MudButton @onclick="SaveDictAsync" Color="Color.Success" Variant="Variant.Text">Make sure to save!</MudButton>
+                <MudButton @onclick="ImportAsync" Color="Color.Error" Variant="Variant.Text">Import</MudButton>
+                <MudButton @onclick="ExportAsync" Color="Color.Success" Variant="Variant.Text">Export</MudButton>
             </div>
             <MudText class="mb-3">Keywords</MudText>
             <div class="d-flex">
@@ -149,8 +155,8 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        textList.Add("Enter text - 1");
-        textList.Add("Enter text - 2");
+        textList.Add("");
+        textList.Add("");
         WeakReferenceMessenger.Default.Register<AcServiceMessage>(this, (r, m) =>
         {
             if(!canTextExpand){
@@ -178,12 +184,52 @@
         else
             dict = new();
     }
+    private async Task ImportAsync()
+    {
+        try
+        {
+            if (await dialogService.DisplayConfirmAsync("Warning!", "This will try and add all the keywords in the .json file you specify. Existing keyword values maybe overwritten. Please ensure you've exported your current config to ensure there's no data loss!", "Proceed", "Nevermind"))
+            {
+                var result = await FilePicker.PickAsync(new PickOptions
+                    {
+                        PickerTitle = "Pick a config (json) file"
+                    });
+                using var strm = await result.OpenReadAsync();
+                var localDict = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(strm);
+                foreach (var item in localDict)
+                {
+                    dict[item.Key] = item.Value;
+                    SendMessage("Add", item);
+                }
+                await dialogService.DisplayConfirmAsync("Import successful!", "Successfully imported all keywords!");
+            }
+        }
+        catch (Exception e)
+        {
+            await dialogService.DisplayConfirmAsync("Error", "Please restart the app to ensure sync" + e.Message);
+        }
+    }
+    private async Task ExportAsync()
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(dict);
+            using MemoryStream strm = new(Encoding.UTF8.GetBytes(json));
+            var x = await fileSaver.SaveAsync("ttconfig.json", strm, CancellationToken.None);
+            x.EnsureSuccess();
+            await dialogService.DisplayConfirmAsync("Export successful!", "Successfully exported all keywords!");
+        }
+        catch (Exception e)
+        {
+            await dialogService.DisplayConfirmAsync("Error", "Please restart the app to ensure sync" + e.Message);
+        }
+    }
     private async Task AddItemAsync(KeyValuePair<string, string> item)
     {
         try
         {
-        dict.Add(item.Key, item.Value);
-        SendMessage("Add", item);
+            dict[item.Key] = item.Value;
+            SendMessage("Add", item);
 
         }
         catch (Exception e)
@@ -208,7 +254,7 @@
         {
             var str = JsonSerializer.Serialize(dict);
             await File.WriteAllTextAsync(DictPath, str);
-            await dialogService.DisplayConfirmAsync("Success!", "File saved successfully!");
+            await dialogService.DisplayConfirmAsync("Success!", "File saved successfully to cache. Make sure to backup your data through the export feature!");
         }
         catch (Exception e)
         {
@@ -223,7 +269,8 @@
     {
         try
         {
-            acService.OpenSettings();
+            if(await dialogService.DisplayConfirmAsync("Need consent!", "Please give consent for this app to use the AccessibilityService API", "I give consent!", "Nevermind"))
+                acService.OpenSettings();
         }
         catch (Exception e)
         {
