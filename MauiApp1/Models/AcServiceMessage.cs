@@ -1,8 +1,9 @@
 using CommunityToolkit.Mvvm.Messaging.Messages;
+using MauiApp1.Models;
 
-public class AcServiceMessage : ValueChangedMessage<(string, KeyValuePair<string, string>)>
+public class AcServiceMessage : ValueChangedMessage<(string, Match)>
 {
-    public AcServiceMessage((string, KeyValuePair<string, string>) message) : base(message)
+    public AcServiceMessage((string, Match) message) : base(message)
     {
     }
 }

@@ -4,6 +4,9 @@
 @using MauiApp1.Models;
 @using System.Text.Json;
 @using System.Text;
+
+@using YamlDotNet.Serialization;
+@using YamlDotNet.Serialization.NamingConventions;
 @inject MauiApp1.Services.IDialogService dialogService
 @inject ICheckIfActivated acService
 @inject IFileSaver fileSaver
@@ -11,32 +14,7 @@
 <MudText Typo="Typo.h4" Align="Align.Center"  class="mb-3">
         Text Tools Pro
 </MudText>
-<MudTextField T="string" HelperText="Length" Counter="textList[0].Length" Label="Text 1" Variant="Variant.Text" @bind-Value="@textList[0]" Lines="5" />
-<MudTextField T="string" HelperText="Length" Counter="textList[1].Length" Label="Text 2" Variant="Variant.Text" @bind-Value="@textList[1]" Lines="5" />
-<MudTabs @ref="@Tabs" class="mt-3" Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
-<MudTabPanel Text="Basic">
-<div class="d-flex flex-wrap">
-   <MudCheckBox Label="Compare" @bind-Checked="@compare" Color="Color.Primary"></MudCheckBox>
-    <MudCheckBox Label="Ignore Case" @bind-Checked="@ignoreCase" Color="Color.Secondary"></MudCheckBox>
-    <MudCheckBox Label="Compare Length" @bind-Checked="@lengthCompare" Color="Color.Warning"></MudCheckBox>
-    <MudCheckBox Label="Contains" @bind-Checked="@contains" Color="Color.Primary"></MudCheckBox>
-    <MudCheckBox Label="Replace" @bind-Checked="@replace" Color="Color.Secondary"></MudCheckBox>
-    <MudCheckBox Label="To Upper" @bind-Checked="@toUpper" Color="Color.Warning"></MudCheckBox>
-    <MudCheckBox Label="To Lower" @bind-Checked="@toLower" Color="Color.Tertiary"></MudCheckBox>
-</div>
-</MudTabPanel>
-<MudTabPanel Text="Discord (& Markdown)">
-<div class="d-flex flex-wrap">
-    <MudCheckBox Label="Bold" @bind-Checked="@makeBold" Color="Color.Primary"></MudCheckBox>
-    <MudCheckBox Label="Italic" @bind-Checked="@makeItalic" Color="Color.Secondary"></MudCheckBox>
-    <MudCheckBox Label="Underline" @bind-Checked="@makeUnderline" Color="Color.Warning"></MudCheckBox>
-    <MudCheckBox Label="Strikethrough" @bind-Checked="@makeStrike" Color="Color.Primary"></MudCheckBox>
-    <MudCheckBox Label="Spoilers" @bind-Checked="@makeSpoiler" Color="Color.Secondary"></MudCheckBox>
-    <MudCheckBox Label="Code Block" @bind-Checked="@makeCode" Color="Color.Warning"></MudCheckBox>
-    <MudCheckBox Label="Quote" @bind-Checked="@makeQuote" Color="Color.Tertiary"></MudCheckBox>
-    <MudCheckBox Label="Add timestamp" @bind-Checked="@addTimeStamp" Color="Color.Tertiary"></MudCheckBox>
-</div>
-</MudTabPanel>
+<MudTabs @ref="@Tabs" class="mt-3" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
 <MudTabPanel Text="Text Expander (Accessibility Service)">
         @if (!canTextExpand)
         {
@@ -49,29 +27,71 @@
                 <MudButton @onclick="ImportAsync" Color="Color.Error" Variant="Variant.Text">Import</MudButton>
                 <MudButton @onclick="ExportAsync" Color="Color.Success" Variant="Variant.Text">Export</MudButton>
             </div>
+            <div class="d-flex justify-center">
+                <MudButton @onclick="ForceQuit" Color="Color.Error" Variant="Variant.Text">Force Quit App</MudButton>
+            </div>
             <MudText class="mb-3">Keywords</MudText>
             <div class="d-flex">
-                <MudTextField class="mr-1" Placeholder="t:omw" @bind-Value="currentExpandTuple.Item1" Label="Key" Variant="Variant.Outlined"></MudTextField>
-                <MudTextField class="mr-1" Placeholder="On my way" @bind-Value="currentExpandTuple.Item2" Label="Value" Variant="Variant.Outlined"></MudTextField>
-                <MudButton @onclick="async () => await AddItemAsync(new KeyValuePair<string, string>(currentExpandTuple.Item1, currentExpandTuple.Item2))" Color="Color.Primary" Variant="Variant.Text">Add</MudButton>
+                <MudTextField class="mr-1" Placeholder="t:omw" @bind-Value="currentMatch.Trigger" Label="Key" Variant="Variant.Outlined"></MudTextField>
+                <MudTextField class="mr-1" Placeholder="On my way" @bind-Value="currentMatch.Replace" Label="Value" Variant="Variant.Outlined"></MudTextField>
+                <MudButton @onclick="async () => await AddItemAsync(currentMatch)" Color="Color.Primary" Variant="Variant.Text">Add</MudButton>
             </div>
+            <MudExpansionPanels Elevation="0" class="mt-2">
+                    <MudExpansionPanel Text="Advanced options for espanso users" MaxHeight="1000">
+                       <MudTextField @bind-Value="currentVar.Name" T="string" Label="Var name" />
+                       <MudTextField @bind-Value="currentVar.Type" T="string" Label="Var type" />
+                       <MudExpansionPanels Elevation="0">
+                            <MudExpansionPanel class="mt-1" Text="Params" MaxHeight="1000">
+                                <MudTextField @bind-Value="currentParam.Format" T="string" Label="Format" />
+                                <MudTextField @bind-Value="currentParam.Echo" T="string" Label="Echo" />
+                                <MudTextField @bind-Value="currentParam.Offset" T="ulong" Label="Offset" />
+                            </MudExpansionPanel>
+                       </MudExpansionPanels> 
+                    </MudExpansionPanel>
+                </MudExpansionPanels>
+            <MudDivider class="mt-2" />
             @if (dict is not null)
                 {
                     @foreach (var item in dict)
                     {
                         <div class="d-flex mt-2">
                         <MudTextField class="mr-1" Disabled="true" Value="item.Key"  Label="Key" Variant="Variant.Outlined"></MudTextField>
-                        <MudTextField class="mr-1" Disabled="true" Value="item.Value" Variant="Variant.Outlined"></MudTextField>
-                        <MudButton @onclick="async () => await RemoveItemAsync(item)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
+                        <MudTextField class="mr-1" Disabled="true" Value="item.Value.Replace" Variant="Variant.Outlined"></MudTextField>
+                        <MudButton @onclick="async () => await RemoveItemAsync(item.Value)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
                         </div>
                     }
 
                 }
         }
     </MudTabPanel>
-
-</MudTabs>
-@if (contains)
+<MudTabPanel Text="Tools">
+    <MudTextField T="string" HelperText="Length" Counter="textList[0].Length" Label="Text 1" Variant="Variant.Text" @bind-Value="@textList[0]" Lines="5" />
+    <MudTextField T="string" HelperText="Length" Counter="textList[1].Length" Label="Text 2" Variant="Variant.Text" @bind-Value="@textList[1]" Lines="5" />
+    <MudTabs class="mt-3" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
+        <MudTabPanel Text="Basic">
+            <div class="d-flex flex-wrap">
+                <MudCheckBox Label="Compare" @bind-Checked="@compare" Color="Color.Primary"></MudCheckBox>
+                <MudCheckBox Label="Ignore Case" @bind-Checked="@ignoreCase" Color="Color.Secondary"></MudCheckBox>
+                <MudCheckBox Label="Compare Length" @bind-Checked="@lengthCompare" Color="Color.Warning"></MudCheckBox>
+                <MudCheckBox Label="Contains" @bind-Checked="@contains" Color="Color.Primary"></MudCheckBox>
+                <MudCheckBox Label="Replace" @bind-Checked="@replace" Color="Color.Secondary"></MudCheckBox>
+                <MudCheckBox Label="To Upper" @bind-Checked="@toUpper" Color="Color.Warning"></MudCheckBox>
+                <MudCheckBox Label="To Lower" @bind-Checked="@toLower" Color="Color.Tertiary"></MudCheckBox>
+            </div>
+        </MudTabPanel>
+        <MudTabPanel Text="Discord (& Markdown)">
+        <div class="d-flex flex-wrap">
+            <MudCheckBox Label="Bold" @bind-Checked="@makeBold" Color="Color.Primary"></MudCheckBox>
+            <MudCheckBox Label="Italic" @bind-Checked="@makeItalic" Color="Color.Secondary"></MudCheckBox>
+            <MudCheckBox Label="Underline" @bind-Checked="@makeUnderline" Color="Color.Warning"></MudCheckBox>
+            <MudCheckBox Label="Strikethrough" @bind-Checked="@makeStrike" Color="Color.Primary"></MudCheckBox>
+            <MudCheckBox Label="Spoilers" @bind-Checked="@makeSpoiler" Color="Color.Secondary"></MudCheckBox>
+            <MudCheckBox Label="Code Block" @bind-Checked="@makeCode" Color="Color.Warning"></MudCheckBox>
+            <MudCheckBox Label="Quote" @bind-Checked="@makeQuote" Color="Color.Tertiary"></MudCheckBox>
+            <MudCheckBox Label="Add timestamp" @bind-Checked="@addTimeStamp" Color="Color.Tertiary"></MudCheckBox>
+        </div>
+        </MudTabPanel>
+        @if (contains)
 {
     <MudTextField class="mt-3" T="string" Label="Contains what?" @bind-Value="@containsText" Variant="Variant.Text" Lines="2" />
 }
@@ -119,6 +139,10 @@
         </div>
     </MudCardContent>
 </MudCard>
+</MudTabs>
+</MudTabPanel>
+</MudTabs>
+
 @code{
     List<string> textList = new();
     bool compare = true;
@@ -149,40 +173,64 @@
     bool canTextExpand = false;
     DateTime? date;
     TimeSpan? timeSpan;
-    (string, string) currentExpandTuple = (string.Empty, string.Empty);
-    private Dictionary<string, string> dict;
+    Match currentMatch = new () { Replace = string.Empty, Trigger = string.Empty, Vars = new() { } };
+    private Dictionary<string, Match> dict;
+    private static List<string> supportedList = new(){ "echo", "date", "clipboard", "random" };
     private string DictPath = Path.Combine(FileSystem.Current.CacheDirectory, "keywords.json");
+    private string GlobalVarsPath = Path.Combine(FileSystem.Current.CacheDirectory, "global.json");
+    private List<Var> globalVars;
+    private Var currentVar = new() { };
+    private Params currentParam = new() { };
     protected override void OnInitialized()
     {
         base.OnInitialized();
         textList.Add("");
         textList.Add("");
-        WeakReferenceMessenger.Default.Register<AcServiceMessage>(this, (r, m) =>
-        {
-            if(!canTextExpand){
-                foreach (var item in dict)
-                {
-                    SendMessage("Add", item);
-                }
-            }
-            canTextExpand = true;
-            StateHasChanged();
-        });
+        //WeakReferenceMessenger.Default.Register<AcServiceMessage>(this, (r, m) =>
+        //{
+        //    if(!canTextExpand){
+
+        //        foreach (var item in dict)
+        //        {
+        //            SendMessage("Add", item.Value);
+        //        }
+        //        //await MainThread.InvokeOnMainThreadAsync(async () =>
+        //        //{
+        //        //    await dialogService.DisplayConfirmAsync("Access recieved!", "Please restart the program. The app will exit.");
+        //        //    Application.Current.Quit();
+        //        //});
+        //        if(globalVars is not null)
+        //        {
+        //            WeakReferenceMessenger.Default.Send(new AcGlobalsMessage(globalVars));
+        //        }
+        //    }
+        //    canTextExpand = true;
+        //    StateHasChanged();
+        //});
         canTextExpand = acService.IsActivated();
         if (File.Exists(DictPath))
         {
             using var stream = File.OpenRead(DictPath);
-            dict = JsonSerializer.Deserialize<Dictionary<string, string>>(stream);
+            dict = JsonSerializer.Deserialize<Dictionary<string, Match>>(stream);
             if (canTextExpand)
             {
                 foreach (var item in dict)
                 {
-                    SendMessage("Add", item);
+                    SendMessage("Add", item.Value);
                 }
             }
         }
         else
             dict = new();
+        if (File.Exists(GlobalVarsPath))
+        {
+            using var stream = File.OpenRead(GlobalVarsPath);
+            globalVars = JsonSerializer.Deserialize<List<Var>>(stream);
+            if (canTextExpand)
+            {
+                WeakReferenceMessenger.Default.Send(new AcGlobalsMessage(globalVars));
+            }
+        }
     }
     private async Task ImportAsync()
     {
@@ -190,63 +238,154 @@
         {
             if (await dialogService.DisplayConfirmAsync("Warning!", "This will try and add all the keywords in the .json file you specify. Existing keyword values maybe overwritten. Please ensure you've exported your current config to ensure there's no data loss!", "Proceed", "Nevermind"))
             {
-                var result = await FilePicker.PickAsync(new PickOptions
-                    {
-                        PickerTitle = "Pick a config (json) file"
-                    });
-                using var strm = await result.OpenReadAsync();
-                var localDict = await JsonSerializer.DeserializeAsync<Dictionary<string, string>>(strm);
-                foreach (var item in localDict)
+                int skips = 0;
+                DictWrapper localDict;
+                if (await dialogService.DisplayConfirmAsync("Choose format!", "Select yml if this is an espanso config. NOTE: Espanso date time formats are not fully supported. Please adjust times in the format described at the playstore description. Also parsing Yml files is highly error prone, it will take you a few tries to get them working. Try removing some matches.", "Json", "Yml"))
                 {
-                    dict[item.Key] = item.Value;
+                    var result = await FilePicker.PickAsync(new PickOptions
+                        {
+                            PickerTitle = "Pick a config (json) file"
+                        });
+                    using var strm = await result.OpenReadAsync();
+                    localDict = await JsonSerializer.DeserializeAsync<DictWrapper>(strm);
+                }
+                else
+                {
+                    var result = await FilePicker.PickAsync(new PickOptions
+                        {
+                            PickerTitle = "Pick a config (yml) file"
+                        });
+                    using var strm = await result.OpenReadAsync();
+                    var deserializer = new DeserializerBuilder()
+                        .WithNamingConvention(UnderscoredNamingConvention.Instance).IgnoreUnmatchedProperties()
+                        .Build();
+                    using TextReader tr = new StreamReader(strm);
+                    localDict = deserializer.Deserialize<DictWrapper>(tr); // I hate yaml smhhhhhhhhhhhhhhh
+                }
+                foreach (var item in localDict.matches)
+                {
+                    if (item.Vars is not null)
+                    {
+                        bool notSupported = item.Replace is null;
+                        foreach (var x in item.Vars)
+                        {
+                            if (x.Type is not null)
+                            {
+                                if(!supportedList.Contains(x.Type)){
+                                    skips++;
+                                    notSupported = true;
+                                    break;
+                                }
+                                else if(x.Type == "date")
+                                {
+                                    try
+                                    {
+                                        x.Params.Format = GetTheRealFormat(x.Params.Format);
+                                    }
+                                    catch (Exception)
+                                    {
+                                        throw new Exception("Please make sure date extension parameter formats are present!");
+                                    }
+                                }
+                            }
+                        }
+                        if (notSupported)
+                            continue;
+                    }
+                    dict[item.Trigger] = item;
                     SendMessage("Add", item);
                 }
-                await dialogService.DisplayConfirmAsync("Import successful!", "Successfully imported all keywords!");
+                if (localDict.global_vars is not null)
+                {
+                    WeakReferenceMessenger.Default.Send(new AcGlobalsMessage(localDict.global_vars));
+                }
+                await dialogService.DisplayConfirmAsync("Import successful!", $"Successfully imported keywords! Skipped: {skips} unsupported var types");
             }
         }
         catch (Exception e)
         {
-            await dialogService.DisplayConfirmAsync("Error", "Please restart the app to ensure sync" + e.Message);
+            await dialogService.DisplayConfirmAsync("Error", "Please restart the app to ensure sync: " + e.Message);
         }
     }
     private async Task ExportAsync()
     {
         try
         {
-            var json = JsonSerializer.Serialize(dict);
-            using MemoryStream strm = new(Encoding.UTF8.GetBytes(json));
-            var x = await fileSaver.SaveAsync("ttconfig.json", strm, CancellationToken.None);
+            string text = null;
+            string name = null;
+            if (await dialogService.DisplayConfirmAsync("Choose format!", "Select yml if this is an espanso config", "Json", "Yml"))
+            {
+                text = JsonSerializer.Serialize(dict);
+                name = "ttconfig.json";
+            }
+            else {
+                DictWrapper dictWrapper = new DictWrapper()
+                {
+                        matches = new List<Match>()
+                };
+                foreach (var item in dict)
+                {
+                    dictWrapper.matches.Add(item.Value);
+                }
+                var serializer = new SerializerBuilder()
+                    .WithNamingConvention(UnderscoredNamingConvention.Instance)
+                    .Build();
+                text = serializer.Serialize(dictWrapper);
+                name = "ttconfig.yml";
+            }
+            using MemoryStream strm = new(Encoding.UTF8.GetBytes(text));
+            var x = await fileSaver.SaveAsync(name, strm, CancellationToken.None);
             x.EnsureSuccess();
             await dialogService.DisplayConfirmAsync("Export successful!", "Successfully exported all keywords!");
         }
         catch (Exception e)
         {
-            await dialogService.DisplayConfirmAsync("Error", "Please restart the app to ensure sync" + e.Message);
+            await dialogService.DisplayConfirmAsync("Error", "Please restart the app to ensure sync: " + e.Message);
         }
     }
-    private async Task AddItemAsync(KeyValuePair<string, string> item)
+    private async Task AddItemAsync(Match item)
     {
         try
         {
-            dict[item.Key] = item.Value;
-            SendMessage("Add", item);
-
+            var copy = new Match(item); // Otherwise the dic just uses the same memory LOL!
+            if (!(string.IsNullOrEmpty(copy.Trigger) || string.IsNullOrEmpty(copy.Replace)))
+            {
+                if (!string.IsNullOrEmpty(currentParam.Format))
+                {
+                    currentParam.Format = GetTheRealFormat(currentParam.Format);
+                }
+                currentVar.Params = currentParam;
+                copy.Vars.Add(currentVar);
+                dict[copy.Trigger] = copy;
+                SendMessage("Add", copy);
+            }
+            else
+            {
+                await dialogService.DisplayConfirmAsync("Empty values", "Fill out all required parameters.");
+            }
         }
         catch (Exception e)
         {
-            await dialogService.DisplayConfirmAsync("Error", "Please restart the app to ensure sync" + e.Message);
+            await dialogService.DisplayConfirmAsync("Error", "Please restart the app to ensure sync: " + e.Message);
         }
     }
-    private async Task RemoveItemAsync(KeyValuePair<string, string> item)
+    private async Task RemoveItemAsync(Match item)
     {
         try
         {
-        dict.Remove(item.Key);
-        SendMessage("Remove", item);
+            if (dict.Remove(item.Trigger, out var _))
+            {
+                SendMessage("Remove", item);
+                await dialogService.DisplayConfirmAsync("Deleted", "Deleted Item!");
+            }
+            else
+            {
+                await dialogService.DisplayConfirmAsync("Could not delete item", "This is a known bug being worked on. Click the save button and then force quit: " + item.Trigger);
+            }
         }
         catch (Exception e)
         {
-            await dialogService.DisplayConfirmAsync("Error", "Please restart the app to ensure sync" + e.Message);
+            await dialogService.DisplayConfirmAsync("Error", "Please restart the app to ensure sync: " + e.Message);
         }
     }
     private async Task SaveDictAsync(){
@@ -262,7 +401,7 @@
         }
     }
 
-    private void SendMessage(string cmd, KeyValuePair<string, string> value){
+    private void SendMessage(string cmd, Match value){
         WeakReferenceMessenger.Default.Send(new AcServiceMessage((cmd, value)));
     }
     private async Task OpenSettings()
@@ -270,12 +409,20 @@
         try
         {
             if(await dialogService.DisplayConfirmAsync("Need consent!", "Please give consent for this app to use the AccessibilityService API", "I give consent!", "Nevermind"))
+            { 
                 acService.OpenSettings();
+                ForceQuit();
+            }
         }
         catch (Exception e)
         {
             await dialogService.DisplayConfirmAsync("Error", e.Message);
         }
+    }
+    private void ForceQuit()
+    {
+        WeakReferenceMessenger.Default.Send(new AcServiceMessage(("Quit", null)));
+        Application.Current.Quit();
     }
     private async Task CopyTextAsync(int n)
     {
@@ -357,6 +504,32 @@
             await dialogService.DisplayConfirmAsync("Error", e.Message);
         }
         processing = false;
+    }
+    private static string GetTheRealFormat(string format)
+    {
+        format = format.Replace("%Y", "yyyy");
+        format = format.Replace("%m", "M");
+        format = format.Replace("%b", "MMM");
+        format = format.Replace("%B", "MMMM");
+        format = format.Replace("%h", "MMM");
+        format = format.Replace("%d", "dd");
+        format = format.Replace("%e", "d");
+        format = format.Replace("%a", "ddd");
+        format = format.Replace("%A", "dddd");
+        format = format.Replace("%j", DateTime.Now.DayOfYear.ToString());
+        format = format.Replace("%w", DateTime.Now.DayOfWeek.ToString());
+        format = format.Replace("%u", (DateTime.Now.DayOfWeek + 1).ToString());
+        format = format.Replace("%D", "MM/dd/yyyy");
+        format = format.Replace("%F", "yyyy/MM/dd");
+        format = format.Replace("%H", "HH");
+        format = format.Replace("%I", "hh");
+        format = format.Replace("%p", "tt");
+        format = format.Replace("%M", "mm");
+        format = format.Replace("%S", "ss");
+        format = format.Replace("%R", "HH:mm");
+        format = format.Replace("%T", "HH:mm:ss");
+        format = format.Replace("%r", "hh:mm:ss tt");
+        return format;
     }
 }
 
