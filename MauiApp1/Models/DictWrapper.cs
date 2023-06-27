@@ -23,10 +23,12 @@ namespace MauiApp1.Models
             Trigger = og.Trigger;
             Replace = og.Replace;
             Vars = og.Vars;
+            //Word = og.Word;
         }
         public string Trigger { get; set; }
         public string Replace { get; set; }
         public List<Var> Vars { get; set; }
+        //public bool Word { get; set; }
     }
     public class Var {
         public string Name { get; set; }

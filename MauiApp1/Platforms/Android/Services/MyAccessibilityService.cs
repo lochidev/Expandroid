@@ -58,31 +58,41 @@ public class MyAccessibilityService : AccessibilityService
                 var Text = e.Text;
                 if (Text != null)
                 {
-                    var text = string.Join(" ", Text);
-                    if (dict.TryGetValue(text, out var match))
+                    string og = Text[0].ToString();
+                    var arr = og.Split(' ');
+                    bool send = false;
+                    foreach (var text in arr)
+                    {
+                        if (dict.TryGetValue(text, out var match))
+                        {
+                            // echo, random, clipboard and date only supported
+                            string replace = match.Replace;
+                            if (globals is not null)
+                            {
+                                foreach (var item in globals)
+                                {
+                                    replace = ParseItem(item, replace);
+                                }
+                            }
+                            if (match.Vars is not null && match.Vars.Count > 0)
+                            {
+                                foreach (var item in match.Vars)
+                                {
+                                    replace = ParseItem(item, replace);
+                                }
+                            }
+                            if(replace is not null)
+                            {
+                                og = og.Replace(match.Trigger, replace);
+                                send = true;
+                            }
+                        }
+                    }
+                    if (send)
                     {
                         Bundle args = new();
-                        // echo, random, clipboard and date only supported
-                        string replace = match.Replace;
-                        if (globals is not null)
-                        {
-                            foreach (var item in globals)
-                            {
-                                replace = ParseItem(item, replace);
-                            }
-                        }
-                        if (match.Vars is not null && match.Vars.Count > 0)
-                        {
-                            foreach (var item in match.Vars)
-                            {
-                                replace = ParseItem(item, replace);
-                            }
-                        }
-                        if (replace is not null)
-                        {
-                            args.PutCharSequence(AccessibilityNodeInfo.ActionArgumentSetTextCharsequence, replace);
-                            e.Source.PerformAction(Android.Views.Accessibility.Action.SetText, args);
-                        }
+                        args.PutCharSequence(AccessibilityNodeInfo.ActionArgumentSetTextCharsequence, og);
+                        e.Source.PerformAction(Android.Views.Accessibility.Action.SetText, args);
                     }
                 }
             }
