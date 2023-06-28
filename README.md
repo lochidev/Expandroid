@@ -13,3 +13,6 @@ Send custom messages with a trigger. Want to quickly type out the current date i
 
 CLI build instructions -> https://learn.microsoft.com/en-us/dotnet/maui/android/deployment/publish-cli
 
+# Donate
+BTC - 3F7XAkLKeUH8ZhdD2g1zJRsbWer4c4c2bC
+
