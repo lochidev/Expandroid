@@ -15,4 +15,5 @@ CLI build instructions -> https://learn.microsoft.com/en-us/dotnet/maui/android/
 
 # Donate
 BTC - 3F7XAkLKeUH8ZhdD2g1zJRsbWer4c4c2bC
+LTC - ltc1qjphn23kql69c0ul6qu88sdsf09qxceswt78yey
 
