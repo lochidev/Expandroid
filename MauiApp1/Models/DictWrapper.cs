@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using YamlDotNet.Serialization;
+﻿using System.Text.Json.Serialization;
 
 namespace MauiApp1.Models
 {
     public class DictWrapper
     {
-        public List<Var> global_vars;
-        public List<Match> matches;
+        [JsonPropertyName("globalVars")]
+        public List<Var> global_vars {  get; set; }
+        [JsonPropertyName("matches")]
+        public List<Match> matches { get; set; }
     }
     public class Match
     {
@@ -30,7 +27,8 @@ namespace MauiApp1.Models
         public List<Var> Vars { get; set; }
         //public bool Word { get; set; }
     }
-    public class Var {
+    public class Var
+    {
         public string Name { get; set; }
         public string Type { get; set; } // echo, random, clipboard and date only supported
         public Params Params { get; set; }

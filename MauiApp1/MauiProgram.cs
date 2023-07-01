@@ -9,21 +9,21 @@ namespace MauiApp1;
 
 public static class MauiProgram
 {
-	public static MauiApp CreateMauiApp()
-	{
-		var builder = MauiApp.CreateBuilder();
-		builder
-			.UseMauiApp<App>().UseMauiCommunityToolkit()
-			.ConfigureFonts(fonts =>
-			{
-				fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
-			});
+    public static MauiApp CreateMauiApp()
+    {
+        MauiAppBuilder builder = MauiApp.CreateBuilder();
+        builder
+            .UseMauiApp<App>().UseMauiCommunityToolkit()
+            .ConfigureFonts(fonts =>
+            {
+                fonts.AddFont("OpenSans-Regular.ttf", "OpenSansRegular");
+            });
 
-		builder.Services.AddMauiBlazorWebView();
+        builder.Services.AddMauiBlazorWebView();
         builder.Services.AddMudServices();
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
-		builder.Logging.AddDebug();
+        builder.Logging.AddDebug();
 #endif
 #if ANDROID
         builder.Services.AddSingleton<ICheckIfActivated, CheckIfActivated>();
@@ -32,5 +32,5 @@ public static class MauiProgram
         builder.Services.AddSingleton(FileSaver.Default);
         builder.Services.AddSingleton(FilePicker.Default);
         return builder.Build();
-	}
+    }
 }

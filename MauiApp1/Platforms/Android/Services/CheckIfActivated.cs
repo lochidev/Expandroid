@@ -4,6 +4,12 @@ using Android.Content.PM;
 using Android.Views.Accessibility;
 using MauiApp1.Models;
 using Android.Provider;
+using Microsoft.Maui.ApplicationModel;
+using AndroidX.Activity.Result.Contract;
+using AndroidX.Core.App;
+using AndroidX.Core.Content;
+using CommunityToolkit.Maui.Core;
+using Android;
 
 namespace MauiApp1.Services
 {
@@ -30,6 +36,24 @@ namespace MauiApp1.Services
             Intent intent = new Intent(Settings.ActionAccessibilitySettings);
             intent.SetFlags(ActivityFlags.NewTask);
             context.StartActivity(intent);
+        }
+        public bool RequestPermission()
+        {
+            var activity = Platform.CurrentActivity ?? throw new NullReferenceException("Current activity is null");
+
+            if (ContextCompat.CheckSelfPermission(activity, Manifest.Permission.WriteExternalStorage) == Permission.Granted)
+            {
+                return true;
+            }
+
+            if (ActivityCompat.ShouldShowRequestPermissionRationale(activity, Manifest.Permission.WriteExternalStorage))
+            {
+                //await Toast.Make("Please grant access to external storage", ToastDuration.Short, 12).Show();
+            }
+
+            ActivityCompat.RequestPermissions(activity, new[] { Manifest.Permission.WriteExternalStorage }, 1);
+
+            return false;
         }
     }
 }

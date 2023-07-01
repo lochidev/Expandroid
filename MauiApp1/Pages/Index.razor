@@ -11,17 +11,18 @@
 @inject ICheckIfActivated acService
 @inject IFileSaver fileSaver
 @inject IFilePicker filePicker
-<MudText Typo="Typo.h4" Align="Align.Center"  class="mb-3">
-        Text Tools Pro
+<MudText Typo="Typo.h4" Align="Align.Center" class="mb-3">
+    Text Tools Pro
 </MudText>
 <MudTabs @ref="@Tabs" class="mt-3" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
-<MudTabPanel Text="Text Expander (Accessibility Service)">
+    <MudTabPanel Text="Text Expander (Accessibility Service)">
         @if (!canTextExpand)
         {
-            <MudText class="mb-3">Please provide access to the AccessibilityServices API in order to use this feature. Data collected through the API never leaves your device. Providing access will give our accessibility service the ability to replace the keywords you set up with the expanded text, whenever you type on an Entry widget, both inside and outside our app!</MudText>
+            <MudText class="mb-3">Please provide access to the AccessibilityServices API in order to use this feature. Data collected through the API never leaves your device. Providing access will give our accessibility service the ability to replace the keywords you set up with the expanded text, whenever you type on an EditText widget, both inside and outside our app!</MudText>
             <MudButton Color="Color.Primary" Variant="Variant.Outlined" @onclick="OpenSettings">Consent And Open Settings</MudButton>
         }
-        else {
+        else
+        {
             <div class="d-flex justify-center">
                 <MudButton @onclick="SaveDictAsync" Color="Color.Success" Variant="Variant.Text">Make sure to save!</MudButton>
                 <MudButton @onclick="ImportAsync" Color="Color.Error" Variant="Variant.Text">Import</MudButton>
@@ -37,113 +38,113 @@
                 <MudButton @onclick="async () => await AddItemAsync(currentMatch)" Color="Color.Primary" Variant="Variant.Text">Add</MudButton>
             </div>
             <MudExpansionPanels Elevation="0" class="mt-2">
-                    <MudExpansionPanel Text="Advanced options for espanso users" MaxHeight="1000">
-                       <MudTextField @bind-Value="currentVar.Name" T="string" Label="Var name" />
-                       <MudTextField @bind-Value="currentVar.Type" T="string" Label="Var type" />
-                       <MudExpansionPanels Elevation="0">
-                            <MudExpansionPanel class="mt-1" Text="Params" MaxHeight="1000">
-                                <MudTextField @bind-Value="currentParam.Format" T="string" Label="Format" />
-                                <MudTextField @bind-Value="currentParam.Echo" T="string" Label="Echo" />
-                                <MudTextField @bind-Value="currentParam.Offset" T="ulong" Label="Offset" />
-                            </MudExpansionPanel>
-                       </MudExpansionPanels> 
-                    </MudExpansionPanel>
-                </MudExpansionPanels>
+                <MudExpansionPanel Text="Advanced options for espanso users" MaxHeight="1000">
+                    <MudTextField @bind-Value="currentVar.Name" T="string" Label="Var name" />
+                    <MudTextField @bind-Value="currentVar.Type" T="string" Label="Var type" />
+                    <MudExpansionPanels Elevation="0">
+                        <MudExpansionPanel class="mt-1" Text="Params" MaxHeight="1000">
+                            <MudTextField @bind-Value="currentParam.Format" T="string" Label="Format" />
+                            <MudTextField @bind-Value="currentParam.Echo" T="string" Label="Echo" />
+                            <MudTextField @bind-Value="currentParam.Offset" T="ulong" Label="Offset" />
+                        </MudExpansionPanel>
+                    </MudExpansionPanels>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
             <MudDivider class="mt-2" />
             @if (dict is not null)
+            {
+                @foreach (var item in dict)
                 {
-                    @foreach (var item in dict)
-                    {
-                        <div class="d-flex mt-2">
-                        <MudTextField class="mr-1" Disabled="true" Value="item.Key"  Label="Key" Variant="Variant.Outlined"></MudTextField>
+                    <div class="d-flex mt-2">
+                        <MudTextField class="mr-1" Disabled="true" Value="item.Key" Label="Key" Variant="Variant.Outlined"></MudTextField>
                         <MudTextField class="mr-1" Disabled="true" Value="item.Value.Replace" Variant="Variant.Outlined"></MudTextField>
                         <MudButton @onclick="async () => await RemoveItemAsync(item.Value)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
-                        </div>
-                    }
-
+                    </div>
                 }
+
+            }
         }
     </MudTabPanel>
-<MudTabPanel Text="Tools">
-    <MudTextField T="string" HelperText="Length" Counter="textList[0].Length" Label="Text 1" Variant="Variant.Text" @bind-Value="@textList[0]" Lines="5" />
-    <MudTextField T="string" HelperText="Length" Counter="textList[1].Length" Label="Text 2" Variant="Variant.Text" @bind-Value="@textList[1]" Lines="5" />
-    <MudTabs class="mt-3" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
-        <MudTabPanel Text="Basic">
-            <div class="d-flex flex-wrap">
-                <MudCheckBox Label="Compare" @bind-Checked="@compare" Color="Color.Primary"></MudCheckBox>
-                <MudCheckBox Label="Ignore Case" @bind-Checked="@ignoreCase" Color="Color.Secondary"></MudCheckBox>
-                <MudCheckBox Label="Compare Length" @bind-Checked="@lengthCompare" Color="Color.Warning"></MudCheckBox>
-                <MudCheckBox Label="Contains" @bind-Checked="@contains" Color="Color.Primary"></MudCheckBox>
-                <MudCheckBox Label="Replace" @bind-Checked="@replace" Color="Color.Secondary"></MudCheckBox>
-                <MudCheckBox Label="To Upper" @bind-Checked="@toUpper" Color="Color.Warning"></MudCheckBox>
-                <MudCheckBox Label="To Lower" @bind-Checked="@toLower" Color="Color.Tertiary"></MudCheckBox>
+    <MudTabPanel Text="Tools">
+        <MudTextField T="string" HelperText="Length" Counter="textList[0].Length" Label="Text 1" Variant="Variant.Text" @bind-Value="@textList[0]" Lines="5" />
+        <MudTextField T="string" HelperText="Length" Counter="textList[1].Length" Label="Text 2" Variant="Variant.Text" @bind-Value="@textList[1]" Lines="5" />
+        <MudTabs class="mt-3" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
+            <MudTabPanel Text="Basic">
+                <div class="d-flex flex-wrap">
+                    <MudCheckBox Label="Compare" @bind-Checked="@compare" Color="Color.Primary"></MudCheckBox>
+                    <MudCheckBox Label="Ignore Case" @bind-Checked="@ignoreCase" Color="Color.Secondary"></MudCheckBox>
+                    <MudCheckBox Label="Compare Length" @bind-Checked="@lengthCompare" Color="Color.Warning"></MudCheckBox>
+                    <MudCheckBox Label="Contains" @bind-Checked="@contains" Color="Color.Primary"></MudCheckBox>
+                    <MudCheckBox Label="Replace" @bind-Checked="@replace" Color="Color.Secondary"></MudCheckBox>
+                    <MudCheckBox Label="To Upper" @bind-Checked="@toUpper" Color="Color.Warning"></MudCheckBox>
+                    <MudCheckBox Label="To Lower" @bind-Checked="@toLower" Color="Color.Tertiary"></MudCheckBox>
+                </div>
+            </MudTabPanel>
+            <MudTabPanel Text="Discord (& Markdown)">
+                <div class="d-flex flex-wrap">
+                    <MudCheckBox Label="Bold" @bind-Checked="@makeBold" Color="Color.Primary"></MudCheckBox>
+                    <MudCheckBox Label="Italic" @bind-Checked="@makeItalic" Color="Color.Secondary"></MudCheckBox>
+                    <MudCheckBox Label="Underline" @bind-Checked="@makeUnderline" Color="Color.Warning"></MudCheckBox>
+                    <MudCheckBox Label="Strikethrough" @bind-Checked="@makeStrike" Color="Color.Primary"></MudCheckBox>
+                    <MudCheckBox Label="Spoilers" @bind-Checked="@makeSpoiler" Color="Color.Secondary"></MudCheckBox>
+                    <MudCheckBox Label="Code Block" @bind-Checked="@makeCode" Color="Color.Warning"></MudCheckBox>
+                    <MudCheckBox Label="Quote" @bind-Checked="@makeQuote" Color="Color.Tertiary"></MudCheckBox>
+                    <MudCheckBox Label="Add timestamp" @bind-Checked="@addTimeStamp" Color="Color.Tertiary"></MudCheckBox>
+                </div>
+            </MudTabPanel>
+            @if (contains)
+            {
+                <MudTextField class="mt-3" T="string" Label="Contains what?" @bind-Value="@containsText" Variant="Variant.Text" Lines="2" />
+            }
+            @if (addTimeStamp)
+            {
+                <MudDatePicker Class="mt-3" Label="Pick a date" @bind-Date="date" />
+                <MudTimePicker Class="mt-3" Label="Pick a time" @bind-Time="timeSpan" />
+            }
+            @if (replace)
+            {
+                <MudTextField class="mt-3" T="string" Label="Replace" @bind-Value="@replaceText" Variant="Variant.Text" Lines="2" />
+                <MudTextField class="mt-3" T="string" Label="Replace with?" @bind-Value="@replaceWithText" Variant="Variant.Text" Lines="2" />
+            }
+            <MudNumericField Class="mt-3" Label="Process on text number" Min="1" Max="2" @bind-Value="@index"></MudNumericField>
+            <div class="d-flex justify-center mt-3 mb-3">
+                <MudButtonGroup class="mb-3" Variant="Variant.Outlined" Color="Color.Primary">
+                    <MudButton Disabled="@processing" OnClick="Process">
+                        @if (processing)
+                        {
+                            <MudProgressCircular Class="ms-n1 mr-2" Size="Size.Small" Indeterminate="true" />
+                            <MudText Class="ms-2">Processing</MudText>
+                        }
+                        else
+                        {
+                            <MudText>Process</MudText>
+                        }
+                    </MudButton>
+                    <MudButton OnClick="async () => await CopyTextAsync(1)">Copy text 1</MudButton>
+                    <MudButton OnClick="async () => await CopyTextAsync(2)">Copy text 2</MudButton>
+
+                </MudButtonGroup>
             </div>
-        </MudTabPanel>
-        <MudTabPanel Text="Discord (& Markdown)">
-        <div class="d-flex flex-wrap">
-            <MudCheckBox Label="Bold" @bind-Checked="@makeBold" Color="Color.Primary"></MudCheckBox>
-            <MudCheckBox Label="Italic" @bind-Checked="@makeItalic" Color="Color.Secondary"></MudCheckBox>
-            <MudCheckBox Label="Underline" @bind-Checked="@makeUnderline" Color="Color.Warning"></MudCheckBox>
-            <MudCheckBox Label="Strikethrough" @bind-Checked="@makeStrike" Color="Color.Primary"></MudCheckBox>
-            <MudCheckBox Label="Spoilers" @bind-Checked="@makeSpoiler" Color="Color.Secondary"></MudCheckBox>
-            <MudCheckBox Label="Code Block" @bind-Checked="@makeCode" Color="Color.Warning"></MudCheckBox>
-            <MudCheckBox Label="Quote" @bind-Checked="@makeQuote" Color="Color.Tertiary"></MudCheckBox>
-            <MudCheckBox Label="Add timestamp" @bind-Checked="@addTimeStamp" Color="Color.Tertiary"></MudCheckBox>
-        </div>
-        </MudTabPanel>
-        @if (contains)
-{
-    <MudTextField class="mt-3" T="string" Label="Contains what?" @bind-Value="@containsText" Variant="Variant.Text" Lines="2" />
-}
-@if (addTimeStamp)
-{
-    <MudDatePicker Class="mt-3" Label="Pick a date" @bind-Date="date"/>
-    <MudTimePicker Class="mt-3" Label="Pick a time" @bind-Time="timeSpan"/>
-}
-@if (replace)
-{
-    <MudTextField class="mt-3" T="string" Label="Replace" @bind-Value="@replaceText" Variant="Variant.Text" Lines="2" />
-    <MudTextField class="mt-3" T="string" Label="Replace with?" @bind-Value="@replaceWithText" Variant="Variant.Text" Lines="2" />
-}
-<MudNumericField Class="mt-3" Label="Process on text number" Min="1" Max="2" @bind-Value="@index"></MudNumericField>
-<div class="d-flex justify-center mt-3 mb-3">
-    <MudButtonGroup class="mb-3" Variant="Variant.Outlined" Color="Color.Primary">
-<MudButton Disabled="@processing" OnClick="Process" >
-    @if (processing)
-    {
-        <MudProgressCircular Class="ms-n1 mr-2" Size="Size.Small" Indeterminate="true"/>
-        <MudText Class="ms-2">Processing</MudText>
-    }
-    else
-    {
-        <MudText>Process</MudText>
-    }
-</MudButton>
-<MudButton OnClick="async () => await CopyTextAsync(1)">Copy text 1</MudButton>
-<MudButton OnClick="async () => await CopyTextAsync(2)">Copy text 2</MudButton>
+            <MudDivider />
+            <MudCard class="mt-3 mb-3">
+                <MudCardContent>
+                    <MudText Typo="Typo.h5">RESULTS</MudText>
+                    <MudText Typo="Typo.h6">PROCESS COUNT: @processCount</MudText>
+                    <MudDivider class="mb-2 mt-2" />
+                    <div class="d-flex flex-wrap">
 
-</MudButtonGroup>
-</div>
-<MudDivider />
-<MudCard class="mt-3 mb-3">
-    <MudCardContent>
-        <MudText Typo="Typo.h5">RESULTS</MudText>
-        <MudText Typo="Typo.h6">PROCESS COUNT: @processCount</MudText>
-        <MudDivider class="mb-2 mt-2"/>
-        <div class="d-flex flex-wrap">
-
-        <MudCheckBox Label="Is Text Equal" ReadOnly="true" Checked="@compareResult" Color="Color.Success"></MudCheckBox>
-        <MudCheckBox Label="Contains the word specified" ReadOnly="true" Checked="@containsResult" Color="Color.Primary"></MudCheckBox>
-        <MudCheckBox Label="Is Length Equal" ReadOnly="true" Checked="@lengthCompareResult" Color="Color.Warning"></MudCheckBox>
-        <MudCheckBox Label="Can Text Expand" ReadOnly="true" Checked="@canTextExpand" Color="Color.Warning"></MudCheckBox>
-        </div>
-    </MudCardContent>
-</MudCard>
-</MudTabs>
-</MudTabPanel>
+                        <MudCheckBox Label="Is Text Equal" ReadOnly="true" Checked="@compareResult" Color="Color.Success"></MudCheckBox>
+                        <MudCheckBox Label="Contains the word specified" ReadOnly="true" Checked="@containsResult" Color="Color.Primary"></MudCheckBox>
+                        <MudCheckBox Label="Is Length Equal" ReadOnly="true" Checked="@lengthCompareResult" Color="Color.Warning"></MudCheckBox>
+                        <MudCheckBox Label="Can Text Expand" ReadOnly="true" Checked="@canTextExpand" Color="Color.Warning"></MudCheckBox>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudTabs>
+    </MudTabPanel>
 </MudTabs>
 
-@code{
+@code {
     List<string> textList = new();
     bool compare = true;
     bool ignoreCase = false;
@@ -173,41 +174,42 @@
     bool canTextExpand = false;
     DateTime? date;
     TimeSpan? timeSpan;
-    Match currentMatch = new () { Replace = string.Empty, Trigger = string.Empty, Vars = new() { } };
+    Match currentMatch = new() { Replace = string.Empty, Trigger = string.Empty, Vars = new() { } };
     private Dictionary<string, Match> dict;
-    private static List<string> supportedList = new(){ "echo", "date", "clipboard", "random" };
-    private string DictPath = Path.Combine(FileSystem.Current.CacheDirectory, "keywords.json");
-    private string GlobalVarsPath = Path.Combine(FileSystem.Current.CacheDirectory, "global.json");
-    private List<Var> globalVars;
+    private static List<string> supportedList = new() { "echo", "date", "clipboard", "random" };
+    private string OldDictPath = Path.Combine(FileSystem.Current.CacheDirectory, "keywords.json");
+    private string DictPath = Path.Combine(FileSystem.Current.AppDataDirectory, "keywords.json");
+    private string GlobalVarsPath = Path.Combine(FileSystem.Current.AppDataDirectory, "global.json");
+    private List<Var> globalVars = new();
     private Var currentVar = new() { };
     private Params currentParam = new() { };
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await base.OnInitializedAsync();
         textList.Add("");
         textList.Add("");
-        //WeakReferenceMessenger.Default.Register<AcServiceMessage>(this, (r, m) =>
-        //{
-        //    if(!canTextExpand){
-
-        //        foreach (var item in dict)
-        //        {
-        //            SendMessage("Add", item.Value);
-        //        }
-        //        //await MainThread.InvokeOnMainThreadAsync(async () =>
-        //        //{
-        //        //    await dialogService.DisplayConfirmAsync("Access recieved!", "Please restart the program. The app will exit.");
-        //        //    Application.Current.Quit();
-        //        //});
-        //        if(globalVars is not null)
-        //        {
-        //            WeakReferenceMessenger.Default.Send(new AcGlobalsMessage(globalVars));
-        //        }
-        //    }
-        //    canTextExpand = true;
-        //    StateHasChanged();
-        //});
         canTextExpand = acService.IsActivated();
+        if (File.Exists(OldDictPath))
+        {
+            var stream = File.OpenRead(OldDictPath);
+            dict = JsonSerializer.Deserialize<Dictionary<string, Match>>(stream);
+            if (canTextExpand)
+            {
+                foreach (var item in dict)
+                {
+                    SendMessage("Add", item.Value);
+                }
+            }
+            await stream.DisposeAsync();
+            var backupFn = DictPath + ".oldbackup";
+            File.Copy(OldDictPath, backupFn);
+            await SaveDictAsync();
+            if (File.Exists(backupFn))
+            {
+                File.Delete(OldDictPath);
+                await dialogService.DisplayConfirmAsync("Migrated successfully!", "All your data in cache has been moved to app data directory instead successfully!");
+            }
+        }
         if (File.Exists(DictPath))
         {
             using var stream = File.OpenRead(DictPath);
@@ -271,12 +273,13 @@
                         {
                             if (x.Type is not null)
                             {
-                                if(!supportedList.Contains(x.Type)){
+                                if (!supportedList.Contains(x.Type))
+                                {
                                     skips++;
                                     notSupported = true;
                                     break;
                                 }
-                                else if(x.Type == "date")
+                                else if (x.Type == "date")
                                 {
                                     try
                                     {
@@ -297,9 +300,12 @@
                 }
                 if (localDict.global_vars is not null)
                 {
-                    WeakReferenceMessenger.Default.Send(new AcGlobalsMessage(localDict.global_vars));
+                    globalVars.AddRange(localDict.global_vars);
+                    var str = JsonSerializer.Serialize(globalVars);
+                    await File.WriteAllTextAsync(GlobalVarsPath, str);
+                    WeakReferenceMessenger.Default.Send(new AcGlobalsMessage(globalVars));
                 }
-                await dialogService.DisplayConfirmAsync("Import successful!", $"Successfully imported keywords! Skipped: {skips} unsupported var types");
+                await dialogService.DisplayConfirmAsync("Import successful!", $"Successfully imported keywords! Skipped: {skips} unsupported variable types. Make sure to save your work!");
             }
         }
         catch (Exception e)
@@ -313,25 +319,38 @@
         {
             string text = null;
             string name = null;
+            DictWrapper dictWrapper = new DictWrapper()
+                {
+                    matches = new List<Match>(),
+                    global_vars = globalVars
+                };
+            foreach (var item in dict)
+            {
+                dictWrapper.matches.Add(item.Value);
+            }
             if (await dialogService.DisplayConfirmAsync("Choose format!", "Select yml if this is an espanso config", "Json", "Yml"))
             {
-                text = JsonSerializer.Serialize(dict);
+                text = JsonSerializer.Serialize(dictWrapper);
                 name = "ttconfig.json";
             }
-            else {
-                DictWrapper dictWrapper = new DictWrapper()
-                {
-                        matches = new List<Match>()
-                };
-                foreach (var item in dict)
-                {
-                    dictWrapper.matches.Add(item.Value);
-                }
+            else
+            {
                 var serializer = new SerializerBuilder()
                     .WithNamingConvention(UnderscoredNamingConvention.Instance)
                     .Build();
                 text = serializer.Serialize(dictWrapper);
                 name = "ttconfig.yml";
+            }
+            if (OperatingSystem.IsAndroidVersionAtLeast(33))
+            {
+                //string file = Path.Combine(FileSystem.CacheDirectory, name);
+                //File.WriteAllText(file, text);
+                //await Share.Default.RequestAsync(new ShareFileRequest
+                //    {
+                //        Title = "Share config file",
+                //        File = new ShareFile(file)
+                //    });
+                acService.RequestPermission();
             }
             using MemoryStream strm = new(Encoding.UTF8.GetBytes(text));
             var x = await fileSaver.SaveAsync(name, strm, CancellationToken.None);
@@ -388,12 +407,13 @@
             await dialogService.DisplayConfirmAsync("Error", "Please restart the app to ensure sync: " + e.Message);
         }
     }
-    private async Task SaveDictAsync(){
+    private async Task SaveDictAsync()
+    {
         try
         {
             var str = JsonSerializer.Serialize(dict);
             await File.WriteAllTextAsync(DictPath, str);
-            await dialogService.DisplayConfirmAsync("Success!", "File saved successfully to cache. Make sure to backup your data through the export feature!");
+            await dialogService.DisplayConfirmAsync("Success!", "File saved successfully to app data directory. Make sure to backup your data through the export feature!");
         }
         catch (Exception e)
         {
@@ -401,15 +421,16 @@
         }
     }
 
-    private void SendMessage(string cmd, Match value){
+    private void SendMessage(string cmd, Match value)
+    {
         WeakReferenceMessenger.Default.Send(new AcServiceMessage((cmd, value)));
     }
     private async Task OpenSettings()
     {
         try
         {
-            if(await dialogService.DisplayConfirmAsync("Need consent!", "Please give consent for this app to use the AccessibilityService API", "I give consent!", "Nevermind"))
-            { 
+            if (await dialogService.DisplayConfirmAsync("Need consent!", "Please give consent for this app to use the AccessibilityService API", "I give consent!", "Nevermind"))
+            {
                 acService.OpenSettings();
                 ForceQuit();
             }
@@ -426,7 +447,7 @@
     }
     private async Task CopyTextAsync(int n)
     {
-        await Clipboard.Default.SetTextAsync(textList[n-1]);
+        await Clipboard.Default.SetTextAsync(textList[n - 1]);
         await dialogService.DisplayConfirmAsync("Copied Text", "Copied the text :D");
     }
     private async Task Process()
@@ -465,31 +486,31 @@
             }
             else
             {
-                if(makeBold)
+                if (makeBold)
                 {
                     textList[index - 1] = "**" + textList[index - 1] + "**";
                 }
-                if(makeItalic)
+                if (makeItalic)
                 {
                     textList[index - 1] = "*" + textList[index - 1] + "*";
                 }
-                if(makeUnderline)
+                if (makeUnderline)
                 {
                     textList[index - 1] = "__" + textList[index - 1] + "__";
                 }
-                if(makeStrike)
+                if (makeStrike)
                 {
                     textList[index - 1] = "~~" + textList[index - 1] + "~~";
                 }
-                if(makeSpoiler)
+                if (makeSpoiler)
                 {
                     textList[index - 1] = "||" + textList[index - 1] + "||";
                 }
-                if(makeCode)
+                if (makeCode)
                 {
                     textList[index - 1] = "```" + textList[index - 1] + "```";
                 }
-                if(makeQuote)
+                if (makeQuote)
                 {
                     textList[index - 1] = ">>>" + textList[index - 1];
                 }

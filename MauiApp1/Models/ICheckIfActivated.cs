@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MauiApp1.Models
+﻿namespace MauiApp1.Models
 {
+    // for temporary hacks
     internal interface ICheckIfActivated
     {
         public bool IsActivated();
         public void OpenSettings();
+        public bool RequestPermission();
     }
 }

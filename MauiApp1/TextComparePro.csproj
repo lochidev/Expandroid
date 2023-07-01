@@ -20,8 +20,8 @@
         <ApplicationIdGuid>A9E98E65-AE83-5428-9AB1-578DC0552CB8</ApplicationIdGuid>
 
         <!-- Versions -->
-        <ApplicationDisplayVersion>5.1</ApplicationDisplayVersion>
-        <ApplicationVersion>9</ApplicationVersion>
+        <ApplicationDisplayVersion>6.0</ApplicationDisplayVersion>
+        <ApplicationVersion>11</ApplicationVersion>
 
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
@@ -29,6 +29,12 @@
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-android|AnyCPU'">
+      <AndroidPackageFormat>aab</AndroidPackageFormat>
+      <AndroidUseAapt2>True</AndroidUseAapt2>
+      <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
     </PropertyGroup>
 
     <ItemGroup>
