@@ -420,6 +420,10 @@
     {
         try
         {
+            foreach (var item in dict)
+            {
+                item.Value.Replace = item.Value.Replace.Replace("\\n", Environment.NewLine);
+            }
             var str = JsonSerializer.Serialize(dict);
             await File.WriteAllTextAsync(AppSettings.DictPath, str);
             await dialogService.DisplayConfirmAsync("Success!", "File saved successfully to app data directory. Make sure to backup your data through the export feature!");
