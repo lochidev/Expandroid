@@ -20,6 +20,8 @@ Send custom messages with a trigger. Want to quickly type out the current date i
 CLI build instructions -> https://learn.microsoft.com/en-us/dotnet/maui/android/deployment/publish-cli
 
 # Donate
+<a href="https://www.buymeacoffee.com/lochi" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-yellow.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
 BTC - 3F7XAkLKeUH8ZhdD2g1zJRsbWer4c4c2bC
 
 LTC - ltc1qjphn23kql69c0ul6qu88sdsf09qxceswt78yey
