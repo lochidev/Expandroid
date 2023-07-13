@@ -566,7 +566,12 @@
         return format;
     }
     private void EditItem(KeyValuePair<string, Match> item){
-        currentMatch = item.Value;
+        currentMatch.Trigger = item.Value.Trigger;
+        currentMatch.Replace = item.Value.Replace;
+        if(item.Value.Vars is not null)
+        {
+            currentMatch.Vars = item.Value.Vars;
+        }
     }
     private void AdjustLazyLoad()
     {
