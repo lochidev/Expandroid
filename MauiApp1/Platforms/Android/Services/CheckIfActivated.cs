@@ -1,15 +1,12 @@
-﻿using Android.AccessibilityServices;
+﻿using Android;
+using Android.AccessibilityServices;
 using Android.Content;
 using Android.Content.PM;
-using Android.Views.Accessibility;
-using MauiApp1.Models;
 using Android.Provider;
-using Microsoft.Maui.ApplicationModel;
-using AndroidX.Activity.Result.Contract;
+using Android.Views.Accessibility;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
-using CommunityToolkit.Maui.Core;
-using Android;
+using MauiApp1.Models;
 
 namespace MauiApp1.Services
 {

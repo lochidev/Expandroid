@@ -33,8 +33,8 @@
             </div>
             <MudText class="mb-3">Keywords</MudText>
             <div class="d-flex">
-                <MudTextField class="mr-1" Placeholder="t:omw" @bind-Value="currentMatch.Trigger" Label="Key" Variant="Variant.Outlined"></MudTextField>
-                <MudTextField class="mr-1" Placeholder="On my way" @bind-Value="currentMatch.Replace" Label="Value" Variant="Variant.Outlined"></MudTextField>
+                <MudTextField Lines="2" class="mr-1" @bind-Value="currentMatch.Trigger" Label="Key" Variant="Variant.Outlined"></MudTextField>
+                <MudTextField Lines="2" class="mr-1" @bind-Value="currentMatch.Replace" Label="Value" Variant="Variant.Outlined"></MudTextField>
                 <MudButton @onclick="async () => await AddItemAsync(currentMatch)" Color="Color.Primary" Variant="Variant.Text">Add</MudButton>
             </div>
             <MudExpansionPanels Elevation="0" class="mt-2">
@@ -53,12 +53,22 @@
             <MudDivider class="mt-2" />
             @if (dict is not null)
             {
-                @foreach (var item in dict)
+                @foreach (var item in dict.Take(dict.Count < lazyLoadIndex ? dict.Count : lazyLoadIndex))
                 {
-                    <div class="d-flex mt-2">
-                        <MudTextField class="mr-1" Disabled="true" Value="item.Key" Label="Key" Variant="Variant.Outlined"></MudTextField>
-                        <MudTextField class="mr-1" Disabled="true" Value="item.Value.Replace" Variant="Variant.Outlined"></MudTextField>
-                        <MudButton @onclick="async () => await RemoveItemAsync(item.Value)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
+                    <MudPaper class="border-solid border-2 mud-border-primary pa-2 mt-2">
+                        <div class="d-flex">
+                            <MudText class="mr-10" Typo="Typo.h6" Align="Align.Start">@item.Key</MudText>
+                            <MudButton @onclick="() => EditItem(item)" Color="Color.Primary" Variant="Variant.Text">Edit</MudButton>
+                            <MudButton @onclick="async () => await RemoveItemAsync(item.Value)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
+                        </div>
+                        <MudText class="mr-1" Typo="Typo.h6" Align="Align.Start">@item.Value.Replace</MudText>
+                    </MudPaper>
+                }
+                @if (dict.Count > lazyLoadIndex){
+                    <div class="d-flex justify-center mt-3">
+                        <MudButton 
+                            @onclick="AdjustLazyLoad" Color="Color.Primary" Variant="Variant.Filled">
+                            Load more</MudButton>
                     </div>
                 }
 
@@ -174,24 +184,21 @@
     bool canTextExpand = false;
     DateTime? date;
     TimeSpan? timeSpan;
-    Match currentMatch = new() { Replace = string.Empty, Trigger = string.Empty, Vars = new() { } };
+    Match currentMatch = new() { Replace = "On my way", Trigger = "t:omw", Vars = new() { } };
     private Dictionary<string, Match> dict;
-    private static List<string> supportedList = new() { "echo", "date", "clipboard", "random" };
-    private string OldDictPath = Path.Combine(FileSystem.Current.CacheDirectory, "keywords.json");
-    private string DictPath = Path.Combine(FileSystem.Current.AppDataDirectory, "keywords.json");
-    private string GlobalVarsPath = Path.Combine(FileSystem.Current.AppDataDirectory, "global.json");
     private List<Var> globalVars = new();
     private Var currentVar = new() { };
     private Params currentParam = new() { };
+    private int lazyLoadIndex = 100;
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
         textList.Add("");
         textList.Add("");
         canTextExpand = acService.IsActivated();
-        if (File.Exists(OldDictPath))
+        if (File.Exists(AppSettings.OldDictPath))
         {
-            var stream = File.OpenRead(OldDictPath);
+            var stream = File.OpenRead(AppSettings.OldDictPath);
             dict = JsonSerializer.Deserialize<Dictionary<string, Match>>(stream);
             if (canTextExpand)
             {
@@ -201,18 +208,18 @@
                 }
             }
             await stream.DisposeAsync();
-            var backupFn = DictPath + ".oldbackup";
-            File.Copy(OldDictPath, backupFn);
+            var backupFn = AppSettings.DictPath + ".oldbackup";
+            File.Copy(AppSettings.OldDictPath, backupFn);
             await SaveDictAsync();
             if (File.Exists(backupFn))
             {
-                File.Delete(OldDictPath);
+                File.Delete(AppSettings.OldDictPath);
                 await dialogService.DisplayConfirmAsync("Migrated successfully!", "All your data in cache has been moved to app data directory instead successfully!");
             }
         }
-        if (File.Exists(DictPath))
+        if (File.Exists(AppSettings.DictPath))
         {
-            using var stream = File.OpenRead(DictPath);
+            using var stream = File.OpenRead(AppSettings.DictPath);
             dict = JsonSerializer.Deserialize<Dictionary<string, Match>>(stream);
             if (canTextExpand)
             {
@@ -224,9 +231,9 @@
         }
         else
             dict = new();
-        if (File.Exists(GlobalVarsPath))
+        if (File.Exists(AppSettings.GlobalVarsPath))
         {
-            using var stream = File.OpenRead(GlobalVarsPath);
+            using var stream = File.OpenRead(AppSettings.GlobalVarsPath);
             globalVars = JsonSerializer.Deserialize<List<Var>>(stream);
             if (canTextExpand)
             {
@@ -273,7 +280,7 @@
                         {
                             if (x.Type is not null)
                             {
-                                if (!supportedList.Contains(x.Type))
+                                if (!AppSettings.supportedList.Contains(x.Type))
                                 {
                                     skips++;
                                     notSupported = true;
@@ -302,7 +309,7 @@
                 {
                     globalVars.AddRange(localDict.global_vars);
                     var str = JsonSerializer.Serialize(globalVars);
-                    await File.WriteAllTextAsync(GlobalVarsPath, str);
+                    await File.WriteAllTextAsync(AppSettings.GlobalVarsPath, str);
                     WeakReferenceMessenger.Default.Send(new AcGlobalsMessage(globalVars));
                 }
                 await dialogService.DisplayConfirmAsync("Import successful!", $"Successfully imported keywords! Skipped: {skips} unsupported variable types. Make sure to save your work!");
@@ -326,6 +333,7 @@
                 };
             foreach (var item in dict)
             {
+                item.Value.Replace = item.Value.Replace.Replace("\\n", Environment.NewLine);
                 dictWrapper.matches.Add(item.Value);
             }
             if (await dialogService.DisplayConfirmAsync("Choose format!", "Select yml if this is an espanso config", "Json", "Yml"))
@@ -375,7 +383,8 @@
                 }
                 currentVar.Params = currentParam;
                 copy.Vars.Add(currentVar);
-                dict[copy.Trigger] = copy;
+                dict[copy.Trigger] = new(copy); // need another copy :(
+                copy.Replace = copy.Replace.Replace("\\n", Environment.NewLine);
                 SendMessage("Add", copy);
             }
             else
@@ -412,7 +421,7 @@
         try
         {
             var str = JsonSerializer.Serialize(dict);
-            await File.WriteAllTextAsync(DictPath, str);
+            await File.WriteAllTextAsync(AppSettings.DictPath, str);
             await dialogService.DisplayConfirmAsync("Success!", "File saved successfully to app data directory. Make sure to backup your data through the export feature!");
         }
         catch (Exception e)
@@ -551,6 +560,21 @@
         format = format.Replace("%T", "HH:mm:ss");
         format = format.Replace("%r", "hh:mm:ss tt");
         return format;
+    }
+    private void EditItem(KeyValuePair<string, Match> item){
+        currentMatch = item.Value;
+    }
+    private void AdjustLazyLoad()
+    {
+        var diff = dict.Count - lazyLoadIndex;
+        if(diff > 100)
+        {
+            lazyLoadIndex += 100;
+        }
+        else
+        {
+            lazyLoadIndex += diff;
+        }
     }
 }
 

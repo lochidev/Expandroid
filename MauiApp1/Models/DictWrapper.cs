@@ -5,7 +5,7 @@ namespace MauiApp1.Models
     public class DictWrapper
     {
         [JsonPropertyName("globalVars")]
-        public List<Var> global_vars {  get; set; }
+        public List<Var> global_vars { get; set; }
         [JsonPropertyName("matches")]
         public List<Match> matches { get; set; }
     }

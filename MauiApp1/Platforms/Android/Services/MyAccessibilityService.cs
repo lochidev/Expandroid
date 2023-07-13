@@ -5,15 +5,15 @@ using Android.OS;
 using Android.Views.Accessibility;
 using CommunityToolkit.Mvvm.Messaging;
 using MauiApp1.Models;
-using System.Collections.Concurrent;
 using System.Security.Cryptography;
+using System.Text.Json;
 
 [Service(Exported = false, Label = "TextToolsPro", Permission = Manifest.Permission.BindAccessibilityService)]
 [IntentFilter(new[] { "android.accessibilityservice.AccessibilityService" })]
 [MetaData("android.accessibilityservice", Resource = "@xml/accessibility_service")]
 public class MyAccessibilityService : AccessibilityService
 {
-    private ConcurrentDictionary<string, Match> dict;
+    private Dictionary<string, Match> dict;
     private List<Var> globals;
 
     public override void OnCreate()
@@ -27,14 +27,15 @@ public class MyAccessibilityService : AccessibilityService
             if (cmd == "Add")
             {
                 if (!(string.IsNullOrEmpty(item.Trigger) || string.IsNullOrEmpty(item.Replace)))
-                { 
-                    dict.AddOrUpdate(item.Trigger, item,
-                    (key, oldValue) => item);
+                {
+                    //dict.AddOrUpdate(item.Trigger, item,
+                    //(key, oldValue) => item);
+                    dict[item.Trigger] = item;
                 }
             }
-            else if(cmd == "Quit")
+            else if (cmd == "Quit")
             {
-                DisableSelf();            
+                DisableSelf();
             }
             else if (cmd is not "_")
             {
@@ -45,6 +46,24 @@ public class MyAccessibilityService : AccessibilityService
         {
             globals = m.Value;
         });
+        try
+        {
+            if (File.Exists(AppSettings.DictPath))
+            {
+                using var stream = File.OpenRead(AppSettings.DictPath);
+                dict = JsonSerializer.Deserialize<Dictionary<string, Match>>(stream);
+            }
+            else
+                dict = new();
+            if (File.Exists(AppSettings.GlobalVarsPath))
+            {
+                using var stream = File.OpenRead(AppSettings.GlobalVarsPath);
+                globals = JsonSerializer.Deserialize<List<Var>>(stream);
+            }
+        }
+        catch (Exception)
+        {
+        }
     }
 
     public override void OnAccessibilityEvent(AccessibilityEvent e)
@@ -59,7 +78,7 @@ public class MyAccessibilityService : AccessibilityService
                 if (Text != null)
                 {
                     string og = Text[0].ToString();
-                    var arr = og.Split(' ');
+                    var arr = og.Split(new char[]{ ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                     bool send = false;
                     foreach (var text in arr)
                     {
@@ -81,7 +100,7 @@ public class MyAccessibilityService : AccessibilityService
                                     replace = ParseItem(item, replace);
                                 }
                             }
-                            if(replace is not null)
+                            if (replace is not null)
                             {
                                 og = og.Replace(match.Trigger, replace);
                                 send = true;

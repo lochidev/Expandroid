@@ -2,7 +2,6 @@
 using CommunityToolkit.Maui.Storage;
 using MauiApp1.Models;
 using MauiApp1.Services;
-using Microsoft.Extensions.Logging;
 using MudBlazor.Services;
 
 namespace MauiApp1;
@@ -23,7 +22,6 @@ public static class MauiProgram
         builder.Services.AddMudServices();
 #if DEBUG
         builder.Services.AddBlazorWebViewDeveloperTools();
-        builder.Logging.AddDebug();
 #endif
 #if ANDROID
         builder.Services.AddSingleton<ICheckIfActivated, CheckIfActivated>();

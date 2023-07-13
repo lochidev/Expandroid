@@ -20,8 +20,8 @@
         <ApplicationIdGuid>A9E98E65-AE83-5428-9AB1-578DC0552CB8</ApplicationIdGuid>
 
         <!-- Versions -->
-        <ApplicationDisplayVersion>6.0</ApplicationDisplayVersion>
-        <ApplicationVersion>11</ApplicationVersion>
+        <ApplicationDisplayVersion>6.1</ApplicationDisplayVersion>
+        <ApplicationVersion>12</ApplicationVersion>
 
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
@@ -32,9 +32,9 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-android|AnyCPU'">
-      <AndroidPackageFormat>aab</AndroidPackageFormat>
+      <AndroidPackageFormat>apk</AndroidPackageFormat>
       <AndroidUseAapt2>True</AndroidUseAapt2>
-      <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
+      <AndroidCreatePackagePerAbi>True</AndroidCreatePackagePerAbi>
     </PropertyGroup>
 
     <ItemGroup>
@@ -60,11 +60,10 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.0" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
 		<PackageReference Include="CommunityToolkit.Maui" Version="5.2.0" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="7.0.0" />
-        <PackageReference Include="MudBlazor" Version="6.2.2" />
-        <PackageReference Include="YamlDotNet" Version="13.1.0" />
+        <PackageReference Include="MudBlazor" Version="6.7.0" />
+        <PackageReference Include="YamlDotNet" Version="13.1.1" />
     </ItemGroup>
 
     <ItemGroup>
