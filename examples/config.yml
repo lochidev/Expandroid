@@ -1,0 +1,31 @@
+global_vars: 
+ - name: global
+   type: echo
+   params:
+     echo: hello from global vars
+matches:
+- trigger: global test
+  replace: Global var test {{global}}
+- trigger: :date
+  replace: '{{date}}'
+  vars:
+  - name: date
+    type: date
+    params:
+      format: dd/MM/%y
+- trigger: :time
+  replace: '{{time}}'
+  vars:
+  - name: time
+    type: date
+    params:
+      format: HH:mm
+- trigger: :rand
+  replace: '{{random_choice}}'
+  vars:
+  - name: random_choice
+    type: random
+    params:
+      choices:
+      - "hello"
+      - "hi"

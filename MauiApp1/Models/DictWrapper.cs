@@ -37,7 +37,7 @@ namespace MauiApp1.Models
     {
         public string Echo { get; set; }
         public string Format { get; set; }
-        public ulong Offset { get; set; } = 0;
+        public long Offset { get; set; } = 0;
         public string Cmd { get; set; }
         public List<string> Choices { get; set; }
     }
