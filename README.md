@@ -5,6 +5,8 @@
     <a href="https://github.com/lochidev/TextComparePro/issues">Request Feature</a>
     ·
     <a href="https://github.com/lochidev/TextComparePro/releases">Releases</a>
+    ·
+    <a href="https://github.com/lochidev/TextComparePro/blob/master/examples/config.yml">Example config</a>
   </p>
 
 Send custom messages with a trigger. Want to quickly type out the current date in a specific format? Or do you want your emojis to replace your triggers? You can do it all cross platform with espanso but now on android too with this app!
@@ -21,41 +23,6 @@ Espanso configuration YML files will take a few tries to parse correctly. Try re
 
 You can further customize date time formats by referring to the C# DateTime.ToString() method documentation from Microsoft.
 
-# Examples
-A working yml snippet is included below!
-```
-global_vars:
-- name: global
-type: echo
-params:
-echo: hello from global vars
-matches:
-- trigger: global test
-replace: Global var test {{global}}
-- trigger: :date
-replace: '{{date}}'
-vars:
-- name: date
-type: date
-params:
-format: dd/MM/%y
-- trigger: :time
-replace: '{{time}}'
-vars:
-- name: time
-type: date
-params:
-format: HH:mm
-- trigger: :rand
-replace: '{{random_choice}}'
-vars:
-- name: random_choice
-type: random
-params:
-choices:
-- "hello"
-- "hi"
-```
 # Build
 
 CLI build instructions -> https://learn.microsoft.com/en-us/dotnet/maui/android/deployment/publish-cli
