@@ -50,6 +50,24 @@
                     </MudExpansionPanels>
                 </MudExpansionPanel>
             </MudExpansionPanels>
+            @foreach (Var item in currentMatch.Vars)
+            {
+                <MudPaper class="border-solid border-2 mud-border-primary pa-2 mt-2">
+                    <div class="d-flex">
+                        <MudText class="mr-10" Typo="Typo.h6" Align="Align.Start">Name: @item.Name Type: @item.Type</MudText>
+                        @*<MudButton @onclick="() => EditItem(item)" Color="Color.Primary" Variant="Variant.Text">Edit</MudButton>*@
+                        <MudButton @onclick="() => currentMatch.Vars.Remove(item)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
+                        <MudExpansionPanels Elevation="0">
+                            <MudExpansionPanel class="mt-1" Text="See Params" MaxHeight="1000">
+                                <MudTextField Disabled="true" @bind-Value="currentParam.Format" T="string" Label="Format" />
+                                <MudTextField Disabled="true" @bind-Value="currentParam.Echo" T="string" Label="Echo" />
+                                <MudTextField Disabled="true" @bind-Value="currentParam.Offset" T="ulong" Label="Offset" />
+                            </MudExpansionPanel>
+                        </MudExpansionPanels>
+                    </div>
+                    <MudText class="mr-1" Typo="Typo.h6" Align="Align.Start">@item.Value.Replace</MudText>
+                </MudPaper>
+            }
             <MudDivider class="mt-2" />
             @if (dict is not null)
             {
@@ -64,11 +82,12 @@
                         <MudText class="mr-1" Typo="Typo.h6" Align="Align.Start">@item.Value.Replace</MudText>
                     </MudPaper>
                 }
-                @if (dict.Count > lazyLoadIndex){
+                @if (dict.Count > lazyLoadIndex)
+                {
                     <div class="d-flex justify-center mt-3">
-                        <MudButton 
-                            @onclick="AdjustLazyLoad" Color="Color.Primary" Variant="Variant.Filled">
-                            Load more</MudButton>
+                        <MudButton @onclick="AdjustLazyLoad" Color="Color.Primary" Variant="Variant.Filled">
+                            Load more
+                        </MudButton>
                     </div>
                 }
 
@@ -565,10 +584,11 @@
         format = format.Replace("%r", "hh:mm:ss tt");
         return format;
     }
-    private void EditItem(KeyValuePair<string, Match> item){
+    private void EditItem(KeyValuePair<string, Match> item)
+    {
         currentMatch.Trigger = item.Value.Trigger;
         currentMatch.Replace = item.Value.Replace;
-        if(item.Value.Vars is not null)
+        if (item.Value.Vars is not null)
         {
             currentMatch.Vars = item.Value.Vars;
         }
@@ -576,7 +596,7 @@
     private void AdjustLazyLoad()
     {
         var diff = dict.Count - lazyLoadIndex;
-        if(diff > 100)
+        if (diff > 100)
         {
             lazyLoadIndex += 100;
         }
