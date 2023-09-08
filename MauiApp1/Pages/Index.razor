@@ -74,7 +74,7 @@
                 @foreach (var item in dict.Take(dict.Count < lazyLoadIndex ? dict.Count : lazyLoadIndex))
                 {
                     <MudPaper class="border-solid border-2 mud-border-primary pa-2 mt-2">
-                        <div class="d-flex">
+                        <div class="d-flex justify-end">
                             <MudText class="mr-10" Typo="Typo.h6" Align="Align.Start">@item.Key</MudText>
                             <MudButton @onclick="() => EditItem(item)" Color="Color.Primary" Variant="Variant.Text">Edit</MudButton>
                             <MudButton @onclick="async () => await RemoveItemAsync(item.Value)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
@@ -157,8 +157,8 @@
             <MudDivider />
             <MudCard class="mt-3 mb-3">
                 <MudCardContent>
-                    <MudText Typo="Typo.h5">RESULTS</MudText>
-                    <MudText Typo="Typo.h6">PROCESS COUNT: @processCount</MudText>
+                    <MudText Typo="Typo.h5">Results</MudText>
+                    <MudText Typo="Typo.h6">Process count: @processCount</MudText>
                     <MudDivider class="mb-2 mt-2" />
                     <div class="d-flex flex-wrap">
 
