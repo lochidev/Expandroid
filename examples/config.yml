@@ -4,7 +4,7 @@ global_vars:
    params:
      echo: hello from global vars
 matches:
-- trigger: global test
+- trigger: global_test
   replace: Global var test {{global}}
 - trigger: :date
   replace: '{{date}}'
@@ -13,6 +13,16 @@ matches:
     type: date
     params:
       format: dd/MM/%y
+- trigger: :cursor
+  replace: '<div>$|$</div>'
+- trigger: :yesterday
+  replace: '{{date}}'
+  vars:
+  - name: date
+    type: date
+    params:
+      format: dd/MM/%y
+      offset: -86400
 - trigger: :time
   replace: '{{time}}'
   vars:
