@@ -109,9 +109,23 @@ public class MyAccessibilityService : AccessibilityService
                     }
                     if (send)
                     {
+                        const string cursorStr = "$|$";
+                        int startIndex = og.IndexOf(cursorStr);
                         Bundle args = new();
                         args.PutCharSequence(AccessibilityNodeInfo.ActionArgumentSetTextCharsequence, og);
+                        Bundle cursorArgs = null;
+                        if (startIndex != -1)
+                        {
+                            //og = og.Replace(cursorStr, " ");
+                            cursorArgs = new Bundle();
+                            cursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionStartInt, startIndex);
+                            cursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionEndInt, startIndex + cursorStr.Length);
+                        }
                         e.Source.PerformAction(Android.Views.Accessibility.Action.SetText, args);
+                        if (cursorArgs is not null)
+                        {
+                            e.Source.PerformAction(Android.Views.Accessibility.Action.SetSelection, cursorArgs);
+                        }
                     }
                 }
             }

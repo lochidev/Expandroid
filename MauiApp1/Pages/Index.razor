@@ -45,41 +45,46 @@
                         <MudExpansionPanel class="mt-1" Text="Params" MaxHeight="1000">
                             <MudTextField @bind-Value="currentParam.Format" T="string" Label="Format" />
                             <MudTextField @bind-Value="currentParam.Echo" T="string" Label="Echo" />
-                            <MudTextField @bind-Value="currentParam.Offset" T="ulong" Label="Offset" />
+                            <MudTextField @bind-Value="currentParam.Offset" T="long" Label="Offset" />
                         </MudExpansionPanel>
                     </MudExpansionPanels>
                 </MudExpansionPanel>
             </MudExpansionPanels>
-            @foreach (Var item in currentMatch.Vars)
-            {
-                <MudPaper class="border-solid border-2 mud-border-primary pa-2 mt-2">
+            //@foreach (Var item in currentMatch.Vars)
+            @*{
+                <MudPaper class="border-solid border-2 mud-border-warning pa-2 mt-2">
                     <div class="d-flex">
-                        <MudText class="mr-10" Typo="Typo.h6" Align="Align.Start">Name: @item.Name Type: @item.Type</MudText>
+                        <MudText class="mr-10" Typo="Typo.body1" Align="Align.Start">Name: @item.Name Type: @item.Type</MudText>*@
                         @*<MudButton @onclick="() => EditItem(item)" Color="Color.Primary" Variant="Variant.Text">Edit</MudButton>*@
-                        <MudButton @onclick="() => currentMatch.Vars.Remove(item)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
-                        <MudExpansionPanels Elevation="0">
-                            <MudExpansionPanel class="mt-1" Text="See Params" MaxHeight="1000">
-                                <MudTextField Disabled="true" @bind-Value="currentParam.Format" T="string" Label="Format" />
-                                <MudTextField Disabled="true" @bind-Value="currentParam.Echo" T="string" Label="Echo" />
-                                <MudTextField Disabled="true" @bind-Value="currentParam.Offset" T="ulong" Label="Offset" />
-                            </MudExpansionPanel>
-                        </MudExpansionPanels>
-                    </div>
-                    <MudText class="mr-1" Typo="Typo.h6" Align="Align.Start">@item.Value.Replace</MudText>
+                        @*<MudButton @onclick="() => currentMatch.Vars.Remove(item)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>*@
+                    @*</div>
+                    <MudExpansionPanels Elevation="0">
+                        <MudExpansionPanel class="mt-1" Text="See Params" MaxHeight="1000">
+                            <MudTextField Disabled="true" @bind-Value="item.Params.Format" T="string" Label="Format" />
+                            <MudTextField Disabled="true" @bind-Value="item.Params.Echo" T="string" Label="Echo" />
+                            <MudTextField Disabled="true" @bind-Value="item.Params.Offset" T="long" Label="Offset" />
+                        </MudExpansionPanel>
+                    </MudExpansionPanels>
                 </MudPaper>
-            }
+            }*@
             <MudDivider class="mt-2" />
             @if (dict is not null)
             {
                 @foreach (var item in dict.Take(dict.Count < lazyLoadIndex ? dict.Count : lazyLoadIndex))
                 {
                     <MudPaper class="border-solid border-2 mud-border-primary pa-2 mt-2">
-                        <div class="d-flex justify-end">
-                            <MudText class="mr-10" Typo="Typo.h6" Align="Align.Start">@item.Key</MudText>
-                            <MudButton @onclick="() => EditItem(item)" Color="Color.Primary" Variant="Variant.Text">Edit</MudButton>
-                            <MudButton @onclick="async () => await RemoveItemAsync(item.Value)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
-                        </div>
-                        <MudText class="mr-1" Typo="Typo.h6" Align="Align.Start">@item.Value.Replace</MudText>
+                        <MudGrid Spacing="10" Justify="Justify.FlexStart">
+                            <MudItem>
+                                <MudText Color="Color.Primary" Typo="Typo.h6" Align="Align.Start">@item.Key</MudText>
+                            </MudItem>
+                            <MudItem>
+                                <div class="pl-10 d-flex justify-end">
+                                    <MudButton @onclick="() => EditItem(item)" Color="Color.Primary" Variant="Variant.Text">Edit</MudButton>
+                                    <MudButton @onclick="async () => await RemoveItemAsync(item.Value)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
+                                </div>
+                            </MudItem>
+                        </MudGrid>
+                        <MudText class="mr-1" Color="Color.Success" Typo="Typo.h6" Align="Align.Start">@item.Value.Replace</MudText>
                     </MudPaper>
                 }
                 @if (dict.Count > lazyLoadIndex)
@@ -162,10 +167,10 @@
                     <MudDivider class="mb-2 mt-2" />
                     <div class="d-flex flex-wrap">
 
-                        <MudCheckBox Label="Is Text Equal" ReadOnly="true" Checked="@compareResult" Color="Color.Success"></MudCheckBox>
+                        <MudCheckBox Label="Is text equal" ReadOnly="true" Checked="@compareResult" Color="Color.Success"></MudCheckBox>
                         <MudCheckBox Label="Contains the word specified" ReadOnly="true" Checked="@containsResult" Color="Color.Primary"></MudCheckBox>
-                        <MudCheckBox Label="Is Length Equal" ReadOnly="true" Checked="@lengthCompareResult" Color="Color.Warning"></MudCheckBox>
-                        <MudCheckBox Label="Can Text Expand" ReadOnly="true" Checked="@canTextExpand" Color="Color.Warning"></MudCheckBox>
+                        <MudCheckBox Label="Is length equal" ReadOnly="true" Checked="@lengthCompareResult" Color="Color.Warning"></MudCheckBox>
+                        <MudCheckBox Label="Can text expand" ReadOnly="true" Checked="@canTextExpand" Color="Color.Warning"></MudCheckBox>
                     </div>
                 </MudCardContent>
             </MudCard>
