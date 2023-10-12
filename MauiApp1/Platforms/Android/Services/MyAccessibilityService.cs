@@ -80,8 +80,10 @@ public class MyAccessibilityService : AccessibilityService
                     string og = Text[0].ToString();
                     var arr = og.Split(new char[]{ ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries);
                     bool send = false;
-                    foreach (var text in arr)
+
+                    for (int wNum = 0; wNum < arr.Length; wNum++)
                     {
+                        var text = arr[wNum];
                         if (dict.TryGetValue(text, out var match))
                         {
                             // echo, random, clipboard and date only supported
@@ -102,7 +104,13 @@ public class MyAccessibilityService : AccessibilityService
                             }
                             if (replace is not null)
                             {
-                                og = og.Replace(match.Trigger, replace);
+                                int index = 0;
+                                for (int i = 0; i < wNum; i++)
+                                {
+                                    index += arr[i].Length;
+                                }
+                                var end = og[index..].Replace(text, replace);
+                                og = og[..index] + end;
                                 send = true;
                             }
                         }

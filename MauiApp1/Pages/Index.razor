@@ -23,14 +23,17 @@
         }
         else
         {
-            <div class="d-flex justify-center">
-                <MudButton @onclick="SaveDictAsync" Color="Color.Success" Variant="Variant.Text">Make sure to save!</MudButton>
-                <MudButton @onclick="ImportAsync" Color="Color.Error" Variant="Variant.Text">Import</MudButton>
-                <MudButton @onclick="ExportAsync" Color="Color.Success" Variant="Variant.Text">Export</MudButton>
+            <div class="mb-2 d-flex justify-center">
+                <MudButton @onclick="SaveDictAsync" Color="Color.Success" Variant="Variant.Outlined">Make sure to save!</MudButton>
+                <MudButton class="ml-2" @onclick="ImportAsync" Color="Color.Error" Variant="Variant.Outlined">Import</MudButton>
+                <MudButton class="ml-2" @onclick="ExportAsync" Color="Color.Success" Variant="Variant.Outlined">Export</MudButton>
             </div>
             <div class="d-flex justify-center">
-                <MudButton @onclick="ForceQuit" Color="Color.Error" Variant="Variant.Text">Force Quit App</MudButton>
+                <MudButton @onclick="ForceQuit" Color="Color.Error" Variant="Variant.Outlined">Force Quit App</MudButton>
             </div>
+            @*<div class="d-flex justify-center">
+                <MudCheckBox Label="Case sensitive" @onclick="ToggleSens" Checked="@sens" Color="Color.Success"></MudCheckBox>
+            </div>*@
             <MudText class="mb-3">Keywords</MudText>
             <div class="d-flex">
                 <MudTextField Lines="2" class="mr-1" @bind-Value="currentMatch.Trigger" Label="Key" Variant="Variant.Outlined"></MudTextField>
@@ -73,7 +76,7 @@
                 @foreach (var item in dict.Take(dict.Count < lazyLoadIndex ? dict.Count : lazyLoadIndex))
                 {
                     <MudPaper class="border-solid border-2 mud-border-primary pa-2 mt-2">
-                        <MudGrid Spacing="10" Justify="Justify.FlexStart">
+                        <div class="d-flex flex-wrap">
                             <MudItem>
                                 <MudText Color="Color.Primary" Typo="Typo.h6" Align="Align.Start">@item.Key</MudText>
                             </MudItem>
@@ -83,7 +86,7 @@
                                     <MudButton @onclick="async () => await RemoveItemAsync(item.Value)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
                                 </div>
                             </MudItem>
-                        </MudGrid>
+                        </div>
                         <MudText class="mr-1" Color="Color.Success" Typo="Typo.h6" Align="Align.Start">@item.Value.Replace</MudText>
                     </MudPaper>
                 }
@@ -214,6 +217,13 @@
     private Var currentVar = new() { };
     private Params currentParam = new() { };
     private int lazyLoadIndex = 100;
+    private bool sens = Preferences.Get("sens", true);
+
+    private async Task ToggleSens()
+    {
+        Preferences.Set("sens", sens = !sens);
+        await dialogService.DisplayConfirmAsync("Toggled Sensitivity", "Please restart the app (Force Quit) for changes to take effect!");
+    }
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
@@ -597,6 +607,7 @@
         {
             currentMatch.Vars = item.Value.Vars;
         }
+        StateHasChanged();
     }
     private void AdjustLazyLoad()
     {

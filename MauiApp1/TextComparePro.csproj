@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
     <PropertyGroup>
-        <TargetFrameworks>net7.0-android;net7.0-ios;net7.0-maccatalyst</TargetFrameworks>
+        <TargetFrameworks>net7.0-ios;net7.0-maccatalyst;net7.0-android33.0</TargetFrameworks>
         <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net7.0-windows10.0.19041.0</TargetFrameworks>
         <!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
         <!-- <TargetFrameworks>$(TargetFrameworks);net7.0-tizen</TargetFrameworks> -->
@@ -20,8 +20,8 @@
         <ApplicationIdGuid>A9E98E65-AE83-5428-9AB1-578DC0552CB8</ApplicationIdGuid>
 
         <!-- Versions -->
-        <ApplicationDisplayVersion>6.1</ApplicationDisplayVersion>
-        <ApplicationVersion>12</ApplicationVersion>
+        <ApplicationDisplayVersion>6.4</ApplicationDisplayVersion>
+        <ApplicationVersion>14</ApplicationVersion>
 
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
@@ -29,18 +29,6 @@
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
         <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net7.0-android|AnyCPU'">
-      <AndroidPackageFormat>apk</AndroidPackageFormat>
-      <AndroidUseAapt2>True</AndroidUseAapt2>
-      <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net7.0-android|AnyCPU'">
-      <AndroidUseAapt2>True</AndroidUseAapt2>
-      <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
-      <AndroidPackageFormat>apk</AndroidPackageFormat>
     </PropertyGroup>
 
     <ItemGroup>
@@ -67,9 +55,9 @@
 
     <ItemGroup>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.1" />
-		<PackageReference Include="CommunityToolkit.Maui" Version="5.2.0" />
-        <PackageReference Include="MudBlazor" Version="6.7.0" />
-        <PackageReference Include="YamlDotNet" Version="13.1.1" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="6.0.0" />
+        <PackageReference Include="MudBlazor" Version="6.10.0" />
+        <PackageReference Include="YamlDotNet" Version="13.5.1" />
     </ItemGroup>
 
     <ItemGroup>
