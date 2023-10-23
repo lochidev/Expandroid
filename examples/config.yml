@@ -39,3 +39,14 @@ matches:
       choices:
       - "hello"
       - "hi"
+- trigger: dateandtime
+  replace: 'date: {{date}} time: {{time}}'
+  vars:
+  - name: date
+    type: date
+    params:
+      format: dd/MM/%y
+  - name: time
+    type: date
+    params:
+      format: mm/HH
