@@ -32,63 +32,91 @@
                 <MudButton @onclick="ForceQuit" Color="Color.Error" Variant="Variant.Outlined">Force Quit App</MudButton>
             </div>
             @*<div class="d-flex justify-center">
-                <MudCheckBox Label="Case sensitive" @onclick="ToggleSens" Checked="@sens" Color="Color.Success"></MudCheckBox>
-            </div>*@
+        <MudCheckBox Label="Case sensitive" @onclick="ToggleSens" Checked="@sens" Color="Color.Success"></MudCheckBox>
+        </div>*@
             <MudText class="mb-3">Keywords</MudText>
             <div class="d-flex">
                 <MudTextField Lines="2" class="mr-1" @bind-Value="currentMatch.Trigger" Label="Key" Variant="Variant.Outlined"></MudTextField>
                 <MudTextField Lines="2" class="mr-1" @bind-Value="currentMatch.Replace" Label="Value" Variant="Variant.Outlined"></MudTextField>
-                <MudButton @onclick="async () => await AddItemAsync(currentMatch)" Color="Color.Primary" Variant="Variant.Text">Add</MudButton>
+                <MudButton @onclick="AddItemAsync" Color="Color.Primary" Variant="Variant.Text">Add</MudButton>
             </div>
+            <MudPaper class="mt-2">
+                <MudList Clickable="false">
+                    <MudListSubheader>
+                        Variables:
+                        <MudChip Color="Color.Secondary">
+                            @currentMatch.Vars.Count
+                        </MudChip>
+                    </MudListSubheader>
+                    @foreach (Var item in currentMatch.Vars)
+                    {
+
+                        <MudStack Justify="@Justify.SpaceBetween" Row="true">
+                            <MudListItem Text="@item.Name" />
+                            <MudButton @onclick="() => RemoveVar(item)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
+                        </MudStack>
+                    }
+                </MudList>
+            </MudPaper>
             <MudExpansionPanels Elevation="0" class="mt-2">
-                <MudExpansionPanel Text="Advanced options for espanso users" MaxHeight="1000">
-                    <MudTextField @bind-Value="currentVar.Name" T="string" Label="Var name" />
-                    <MudTextField @bind-Value="currentVar.Type" T="string" Label="Var type" />
-                    <MudExpansionPanels Elevation="0">
-                        <MudExpansionPanel class="mt-1" Text="Params" MaxHeight="1000">
-                            <MudTextField @bind-Value="currentParam.Format" T="string" Label="Format" />
-                            <MudTextField @bind-Value="currentParam.Echo" T="string" Label="Echo" />
-                            <MudTextField @bind-Value="currentParam.Offset" T="long" Label="Offset" />
-                        </MudExpansionPanel>
-                    </MudExpansionPanels>
+                <MudExpansionPanel Text="Templates" MaxHeight="1000">
+                        <MudStack class="mt-1" Justify="@Justify.SpaceBetween" Row="true">
+                            <MudText >Date today</MudText>
+                            <MudButton @onclick="() => AddPreBuiltVar(0)" Color="Color.Primary" Variant="Variant.Outlined">Add variable</MudButton>
+                        </MudStack>
+                    <MudStack class="mt-1" Justify="@Justify.SpaceBetween" Row="true">
+                            <MudText >Date yesterday</MudText>
+                            <MudButton @onclick="() => AddPreBuiltVar(1)" Color="Color.Primary" Variant="Variant.Outlined">Add variable</MudButton>
+                        </MudStack>
+                    <MudStack class="mt-1" Justify="@Justify.SpaceBetween" Row="true">
+                            <MudText>Date tomorrow</MudText>
+                            <MudButton @onclick="() => AddPreBuiltVar(2)" Color="Color.Primary" Variant="Variant.Outlined">Add variable</MudButton>
+                        </MudStack>
+                        <MudStack class="mt-1" Justify="@Justify.SpaceBetween" Row="true">
+                            <MudText>Time now</MudText>
+                            <MudButton @onclick="() => AddPreBuiltVar(3)" Color="Color.Primary" Variant="Variant.Outlined">Add variable</MudButton>
+                        </MudStack>
+                        <MudStack class="mt-1" Justify="@Justify.SpaceBetween" Row="true">
+                            <MudText>Add selection cursor</MudText>
+                            <MudButton @onclick="() => AddPreBuiltVar(4)" Color="Color.Primary" Variant="Variant.Outlined">Add cursor</MudButton>
+                        </MudStack>
                 </MudExpansionPanel>
             </MudExpansionPanels>
-            //@foreach (Var item in currentMatch.Vars)
-            @*{
-                <MudPaper class="border-solid border-2 mud-border-warning pa-2 mt-2">
-                    <div class="d-flex">
-                        <MudText class="mr-10" Typo="Typo.body1" Align="Align.Start">Name: @item.Name Type: @item.Type</MudText>*@
-                        @*<MudButton @onclick="() => EditItem(item)" Color="Color.Primary" Variant="Variant.Text">Edit</MudButton>*@
-                        @*<MudButton @onclick="() => currentMatch.Vars.Remove(item)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>*@
-                    @*</div>
+            <MudExpansionPanels Elevation="0" class="mt-2">
+                <MudExpansionPanel Text="Advanced options for espanso users" MaxHeight="1000">
+                    <MudTextField @bind-Value="currentVar.Name" T="string" Label="Variable name" />
+                    <MudTextField @bind-Value="currentVar.Type" T="string" Label="Variable type" />
                     <MudExpansionPanels Elevation="0">
-                        <MudExpansionPanel class="mt-1" Text="See Params" MaxHeight="1000">
-                            <MudTextField Disabled="true" @bind-Value="item.Params.Format" T="string" Label="Format" />
-                            <MudTextField Disabled="true" @bind-Value="item.Params.Echo" T="string" Label="Echo" />
-                            <MudTextField Disabled="true" @bind-Value="item.Params.Offset" T="long" Label="Offset" />
+                        <MudExpansionPanel class="mt-1" Text="Params" MaxHeight="1000">
+                            <MudTextField @bind-Value="currentVar.Params.Format" T="string" Label="Format" />
+                            <MudTextField @bind-Value="currentVar.Params.Echo" T="string" Label="Echo" />
+                            <MudTextField @bind-Value="currentVar.Params.Offset" T="long" Label="Offset" />
                         </MudExpansionPanel>
                     </MudExpansionPanels>
-                </MudPaper>
-            }*@
+                    <div class="d-flex justify-center">
+                        <MudButton @onclick="AddCurrentVar" Color="Color.Primary" Variant="Variant.Outlined">Add Variable</MudButton>
+                    </div>
+                </MudExpansionPanel>
+            </MudExpansionPanels>
             <MudDivider class="mt-2" />
             @if (dict is not null)
             {
                 @foreach (var item in dict.Take(dict.Count < lazyLoadIndex ? dict.Count : lazyLoadIndex))
                 {
                     <MudPaper class="border-solid border-2 mud-border-primary pa-2 mt-2">
-                        <div class="d-flex flex-wrap">
+                        <MudStack Justify="@Justify.SpaceBetween" Row="true">
                             <MudItem>
                                 <MudText Color="Color.Primary" Typo="Typo.h6" Align="Align.Start">@item.Key</MudText>
-                            </MudItem>
-                            <MudItem>
-                                <div class="pl-10 d-flex justify-end">
-                                    <MudButton @onclick="() => EditItem(item)" Color="Color.Primary" Variant="Variant.Text">Edit</MudButton>
-                                    <MudButton @onclick="async () => await RemoveItemAsync(item.Value)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
-                                </div>
-                            </MudItem>
-                        </div>
-                        <MudText class="mr-1" Color="Color.Success" Typo="Typo.h6" Align="Align.Start">@item.Value.Replace</MudText>
-                    </MudPaper>
+                                </MudItem>
+                                <MudItem>
+                                    <MudStack Row="true">
+                                        <MudButton @onclick="() => EditItem(item)" Color="Color.Primary" Variant="Variant.Text">Edit</MudButton>
+                                        <MudButton @onclick="async () => await RemoveItemAsync(item.Value)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
+                                    </MudStack>
+                                </MudItem>
+                            </MudStack>
+                            <MudText class="mr-1" Color="Color.Success" Typo="Typo.h6" Align="Align.Start">@item.Value.Replace</MudText>
+                        </MudPaper>
                 }
                 @if (dict.Count > lazyLoadIndex)
                 {
@@ -167,21 +195,21 @@
                 <MudCardContent>
                     <MudText Typo="Typo.h5">Results</MudText>
                     <MudText Typo="Typo.h6">Process count: @processCount</MudText>
-                    <MudDivider class="mb-2 mt-2" />
-                    <div class="d-flex flex-wrap">
+                        <MudDivider class="mb-2 mt-2" />
+                        <div class="d-flex flex-wrap">
 
-                        <MudCheckBox Label="Is text equal" ReadOnly="true" Checked="@compareResult" Color="Color.Success"></MudCheckBox>
-                        <MudCheckBox Label="Contains the word specified" ReadOnly="true" Checked="@containsResult" Color="Color.Primary"></MudCheckBox>
-                        <MudCheckBox Label="Is length equal" ReadOnly="true" Checked="@lengthCompareResult" Color="Color.Warning"></MudCheckBox>
-                        <MudCheckBox Label="Can text expand" ReadOnly="true" Checked="@canTextExpand" Color="Color.Warning"></MudCheckBox>
-                    </div>
-                </MudCardContent>
-            </MudCard>
-        </MudTabs>
-    </MudTabPanel>
-</MudTabs>
+                            <MudCheckBox Label="Is text equal" ReadOnly="true" Checked="@compareResult" Color="Color.Success"></MudCheckBox>
+                            <MudCheckBox Label="Contains the word specified" ReadOnly="true" Checked="@containsResult" Color="Color.Primary"></MudCheckBox>
+                            <MudCheckBox Label="Is length equal" ReadOnly="true" Checked="@lengthCompareResult" Color="Color.Warning"></MudCheckBox>
+                            <MudCheckBox Label="Can text expand" ReadOnly="true" Checked="@canTextExpand" Color="Color.Warning"></MudCheckBox>
+                        </div>
+                    </MudCardContent>
+                </MudCard>
+            </MudTabs>
+        </MudTabPanel>
+    </MudTabs>
 
-@code {
+    @code {
     List<string> textList = new();
     bool compare = true;
     bool ignoreCase = false;
@@ -214,10 +242,70 @@
     Match currentMatch = new() { Replace = "On my way", Trigger = "t:omw", Vars = new() { } };
     private Dictionary<string, Match> dict;
     private List<Var> globalVars = new();
-    private Var currentVar = new() { };
-    private Params currentParam = new() { };
+    private Var currentVar = new() { Params = new() };
+    // private Params currentParam = new() { };
     private int lazyLoadIndex = 100;
     private bool sens = Preferences.Get("sens", true);
+    private void AddPreBuiltVar(int i)
+    {
+        switch (i)
+        {
+            case 0:
+                currentMatch.Vars.Add(new()
+                    {
+                        Name = "datenow",
+                        Type = "date",
+                        Params = new()
+                        {
+                            Format = "dd/MM/yyyy"
+                        }
+                    });
+                currentMatch.Replace += " {{datenow}}";
+                break;
+            case 1:
+                currentMatch.Vars.Add(new()
+                    {
+                        Name = "yesterday",
+                        Type = "date",
+                        Params = new()
+                        {
+                            Format = "dd/MM/yyyy",
+                            Offset = -86400
+                        }
+                    });
+                currentMatch.Replace += " {{yesterday}}";
+                break;
+            case 2:
+                currentMatch.Vars.Add(new()
+                    {
+                        Name = "tommorow",
+                        Type = "date",
+                        Params = new()
+                        {
+                            Format = "dd/MM/yyyy",
+                            Offset = 86400
+                        }
+                    });
+                currentMatch.Replace += " {{tommorow}}";
+                break;
+            case 3:
+                currentMatch.Vars.Add(new()
+                    {
+                        Name = "time",
+                        Type = "date",
+                        Params = new()
+                        {
+                            Format = "HH:mm",
+                        }
+                    });
+                currentMatch.Replace += " {{time}}";
+                break;
+            case 4:
+                currentMatch.Replace += " $|$";
+                break;
+
+        }
+    }
 
     private async Task ToggleSens()
     {
@@ -404,19 +492,28 @@
             await dialogService.DisplayConfirmAsync("Error", "Please restart the app to ensure sync: " + e.Message);
         }
     }
-    private async Task AddItemAsync(Match item)
+    private void AddCurrentVar()
+    {
+        Var copy = new(currentVar) { Params = new(currentVar.Params) };
+        if (!string.IsNullOrEmpty(copy.Params.Format))
+        {
+            copy.Params.Format = GetTheRealFormat(copy.Params.Format);
+        }
+        currentMatch.Vars.Add(copy);
+    }
+    private void RemoveVar(Var item)
+    {
+        currentMatch.Vars.Remove(item);
+    }
+    private async Task AddItemAsync()
     {
         try
         {
-            var copy = new Match(item); // Otherwise the dic just uses the same memory LOL!
+            var copy = new Match(currentMatch); // Otherwise the dic just uses the same memory LOL!
             if (!(string.IsNullOrEmpty(copy.Trigger) || string.IsNullOrEmpty(copy.Replace)))
             {
-                if (!string.IsNullOrEmpty(currentParam.Format))
-                {
-                    currentParam.Format = GetTheRealFormat(currentParam.Format);
-                }
-                currentVar.Params = currentParam;
-                copy.Vars.Add(currentVar);
+
+                // copy.Vars.Add(currentVar);
                 dict[copy.Trigger] = new(copy); // need another copy :(
                 copy.Replace = copy.Replace.Replace("\\n", Environment.NewLine);
                 SendMessage("Add", copy);
@@ -621,5 +718,5 @@
             lazyLoadIndex += diff;
         }
     }
-}
+    }
 

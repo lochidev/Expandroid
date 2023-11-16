@@ -66,7 +66,7 @@ public class MyAccessibilityService : AccessibilityService
         }
     }
 
-    public override void OnAccessibilityEvent(AccessibilityEvent e)
+    public override async void OnAccessibilityEvent(AccessibilityEvent e)
     {
         try
         {
@@ -92,14 +92,14 @@ public class MyAccessibilityService : AccessibilityService
                             {
                                 foreach (var item in globals)
                                 {
-                                    replace = ParseItem(item, replace);
+                                    replace = await ParseItemAsync(item, replace);
                                 }
                             }
                             if (match.Vars is not null && match.Vars.Count > 0)
                             {
                                 foreach (var item in match.Vars)
                                 {
-                                    replace = ParseItem(item, replace);
+                                    replace = await ParseItemAsync(item, replace);
                                 }
                             }
                             if (replace is not null)
@@ -144,7 +144,7 @@ public class MyAccessibilityService : AccessibilityService
 
         }
     }
-    private string ParseItem(Var item, string replace)
+    private async Task<string> ParseItemAsync(Var item, string replace)
     {
         try
         {
@@ -160,9 +160,9 @@ public class MyAccessibilityService : AccessibilityService
                         replace = replace.Replace(WrapName(item.Name), choices[RandomNumberGenerator.GetInt32(0, choices.Count)]);
                         break;
                     case "clipboard":
-                        if (Clipboard.Default.HasText)
+                        //if (Clipboard.Default.HasText)
                         {
-                            var clip = Clipboard.Default.GetTextAsync().GetAwaiter().GetResult();
+                            var clip = await Clipboard.Default.GetTextAsync();
                             replace = replace.Replace(WrapName(item.Name), clip);
                         }
                         break;
