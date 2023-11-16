@@ -19,7 +19,7 @@ namespace MauiApp1.Models
         {
             Trigger = og.Trigger;
             Replace = og.Replace;
-            Vars = og.Vars;
+            Vars = new (og.Vars);
             //Word = og.Word;
         }
         public string Trigger { get; set; }
@@ -34,7 +34,7 @@ namespace MauiApp1.Models
         {
             Name = og.Name;
             Type = og.Type;
-            Params = og.Params;
+            Params = new(og.Params);
         }
         public string Name { get; set; }
         public string Type { get; set; } // echo, random, clipboard and date only supported

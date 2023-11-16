@@ -30,6 +30,15 @@
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-android|AnyCPU'">
+      <AndroidPackageFormat>apk</AndroidPackageFormat>
+      <AndroidCreatePackagePerAbi>True</AndroidCreatePackagePerAbi>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-android|AnyCPU'">
+      <AndroidCreatePackagePerAbi>True</AndroidCreatePackagePerAbi>
+    </PropertyGroup>
+
     <ItemGroup>
          <!-- App Icon -->
         <MauiIcon Include="Resources\AppIcon\appicon.svg" BaseSize="512,512" />
@@ -58,7 +67,7 @@
         <PackageReference Include="MudBlazor" Version="6.11.0" />
         <PackageReference Include="YamlDotNet" Version="13.7.1" />
 		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.3" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="8.0.3"/>
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="8.0.3" />
 	</ItemGroup>
 
     <ItemGroup>
