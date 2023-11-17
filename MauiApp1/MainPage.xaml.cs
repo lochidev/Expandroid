@@ -1,4 +1,6 @@
-﻿namespace MauiApp1;
+﻿using System.Diagnostics;
+
+namespace MauiApp1;
 
 public partial class MainPage : ContentPage
 {
