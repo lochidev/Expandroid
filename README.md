@@ -20,8 +20,6 @@ Send custom messages with a trigger. Want to quickly type out the current date i
 # Disclaimer
 I am now a full time student doing science stuff and I dont have much time to develop this app. It is too much work and takes a lot of hours that could've helped with my studies and it has very little pay off.  So my plan for the app is to update every 3 months or so when I have free time.
 
-There is an issue with this android 14 release however, where when u clear the app, while the accessibility service stays on and works, when you want to start the app UI again by clicking it, it will get stuck, and you will have to force stop the app and start it again. I will see if I can fix it sooner. 
-
 # Notes 
 Espanso configuration YML files will take a few tries to parse correctly. Try removing some matches, and make sure it's compliant with the YML specs. Some working examples are provided below for your convenience to copy and paste. Please also note that only the following extensions are supported -> date, clipboard, random and echo. Finally, note that not all espanso/rust chrono date time formats are supported. Supported formats are,
 - %Y, %m, %b, %B, %h, %d, %e, %a, %A, %j, %w, %u, %D, %F, %H, %I, %p, %M, %S, %R, %T, %r
