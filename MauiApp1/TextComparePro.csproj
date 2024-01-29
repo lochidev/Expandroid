@@ -19,8 +19,8 @@
         <ApplicationIdGuid>A9E98E65-AE83-5428-9AB1-578DC0552CB8</ApplicationIdGuid>
 
         <!-- Versions -->
-        <ApplicationDisplayVersion>6.7</ApplicationDisplayVersion>
-        <ApplicationVersion>18</ApplicationVersion>
+        <ApplicationDisplayVersion>6.8</ApplicationDisplayVersion>
+        <ApplicationVersion>19</ApplicationVersion>
 
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
         <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
@@ -75,15 +75,19 @@
 
     <ItemGroup>
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-		<PackageReference Include="CommunityToolkit.Maui" Version="7.0.0" />
-        <PackageReference Include="MudBlazor" Version="6.11.0" />
-        <PackageReference Include="YamlDotNet" Version="13.7.1" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="8.0.3" />
-		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.3" />
+		<PackageReference Include="CommunityToolkit.Maui" Version="7.0.1" />
+        <PackageReference Include="MudBlazor" Version="6.14.0" />
+        <PackageReference Include="YamlDotNet" Version="15.1.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="8.0.6" />
+		<PackageReference Include="Microsoft.Maui.Controls" Version="8.0.6" />
 	</ItemGroup>
 
     <ItemGroup>
       <Folder Include="Resources\Images\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Update="Microsoft.Maui.Controls.Compatibility" Version="8.0.6" />
     </ItemGroup>
 
 </Project>

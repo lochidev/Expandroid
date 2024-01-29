@@ -58,28 +58,34 @@
                     }
                 </MudList>
             </MudPaper>
+            <MudPaper class="mt-2">
+
+                <div class="d-flex justify-center">
+                    <MudCheckBox @bind-Checked="currentMatch.Word" Label="Word" />
+                </div>
+            </MudPaper>
             <MudExpansionPanels Elevation="0" class="mt-2">
                 <MudExpansionPanel Text="Templates" MaxHeight="1000">
-                        <MudStack class="mt-1" Justify="@Justify.SpaceBetween" Row="true">
-                            <MudText >Date today</MudText>
-                            <MudButton @onclick="() => AddPreBuiltVar(0)" Color="Color.Primary" Variant="Variant.Outlined">Add variable</MudButton>
-                        </MudStack>
                     <MudStack class="mt-1" Justify="@Justify.SpaceBetween" Row="true">
-                            <MudText >Date yesterday</MudText>
-                            <MudButton @onclick="() => AddPreBuiltVar(1)" Color="Color.Primary" Variant="Variant.Outlined">Add variable</MudButton>
-                        </MudStack>
+                        <MudText>Date today</MudText>
+                        <MudButton @onclick="() => AddPreBuiltVar(0)" Color="Color.Primary" Variant="Variant.Outlined">Add variable</MudButton>
+                    </MudStack>
                     <MudStack class="mt-1" Justify="@Justify.SpaceBetween" Row="true">
-                            <MudText>Date tomorrow</MudText>
-                            <MudButton @onclick="() => AddPreBuiltVar(2)" Color="Color.Primary" Variant="Variant.Outlined">Add variable</MudButton>
-                        </MudStack>
-                        <MudStack class="mt-1" Justify="@Justify.SpaceBetween" Row="true">
-                            <MudText>Time now</MudText>
-                            <MudButton @onclick="() => AddPreBuiltVar(3)" Color="Color.Primary" Variant="Variant.Outlined">Add variable</MudButton>
-                        </MudStack>
-                        <MudStack class="mt-1" Justify="@Justify.SpaceBetween" Row="true">
-                            <MudText>Add selection cursor</MudText>
-                            <MudButton @onclick="() => AddPreBuiltVar(4)" Color="Color.Primary" Variant="Variant.Outlined">Add cursor</MudButton>
-                        </MudStack>
+                        <MudText>Date yesterday</MudText>
+                        <MudButton @onclick="() => AddPreBuiltVar(1)" Color="Color.Primary" Variant="Variant.Outlined">Add variable</MudButton>
+                    </MudStack>
+                    <MudStack class="mt-1" Justify="@Justify.SpaceBetween" Row="true">
+                        <MudText>Date tomorrow</MudText>
+                        <MudButton @onclick="() => AddPreBuiltVar(2)" Color="Color.Primary" Variant="Variant.Outlined">Add variable</MudButton>
+                    </MudStack>
+                    <MudStack class="mt-1" Justify="@Justify.SpaceBetween" Row="true">
+                        <MudText>Time now</MudText>
+                        <MudButton @onclick="() => AddPreBuiltVar(3)" Color="Color.Primary" Variant="Variant.Outlined">Add variable</MudButton>
+                    </MudStack>
+                    <MudStack class="mt-1" Justify="@Justify.SpaceBetween" Row="true">
+                        <MudText>Add selection cursor</MudText>
+                        <MudButton @onclick="() => AddPreBuiltVar(4)" Color="Color.Primary" Variant="Variant.Outlined">Add cursor</MudButton>
+                    </MudStack>
                 </MudExpansionPanel>
             </MudExpansionPanels>
             <MudExpansionPanels Elevation="0" class="mt-2">
@@ -247,7 +253,7 @@
     private int lazyLoadIndex = 100;
     private bool sens = Preferences.Get("sens", true);
 
-    
+
 
     private void AddPreBuiltVar(int i)
     {

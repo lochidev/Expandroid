@@ -15,6 +15,8 @@ public class MyAccessibilityService : AccessibilityService
 {
     private Dictionary<string, Match> dict;
     private List<Var> globals;
+    private static readonly char[] separator = [' ', '\n', ','];
+    //private static readonly char[] wordSeparator = [' ', /*'\n',*/ ','];
 
     public override void OnCreate()
     {
@@ -78,7 +80,8 @@ public class MyAccessibilityService : AccessibilityService
                 if (Text != null)
                 {
                     string og = Text[0].ToString();
-                    var arr = og.Split(new char[]{ ' ', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+                    //quick brown fox
+                    var arr = og.Split(separator, StringSplitOptions.RemoveEmptyEntries);
                     bool send = false;
 
                     for (int wNum = 0; wNum < arr.Length; wNum++)
@@ -88,6 +91,26 @@ public class MyAccessibilityService : AccessibilityService
                         {
                             // echo, random, clipboard and date only supported
                             string replace = match.Replace;
+                            if (match.Word)
+                            { 
+                                int index = 0;
+                                for (int i = 0; i < wNum; i++)
+                                {
+                                    index += arr[0].Length;
+                                }
+                                var start = og.IndexOf(text, index);
+                                //check the start
+                                if (start != 0 && !separator.Contains(og[start - 1]))
+                                {
+                                    break;
+                                }
+                                //check the end
+                                var end = start + text.Length;
+                                if ((end) <= og.Length && !separator.Contains(og[end]))
+                                {
+                                    break;
+                                }
+                            }
                             if (globals is not null)
                             {
                                 foreach (var item in globals)
