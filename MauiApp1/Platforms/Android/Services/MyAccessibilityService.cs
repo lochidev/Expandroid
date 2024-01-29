@@ -1,6 +1,7 @@
 ﻿using Android;
 using Android.AccessibilityServices;
 using Android.App;
+using Android.Content;
 using Android.OS;
 using Android.Views.Accessibility;
 using CommunityToolkit.Mvvm.Messaging;
@@ -15,6 +16,8 @@ public class MyAccessibilityService : AccessibilityService
 {
     private Dictionary<string, Match> dict;
     private List<Var> globals;
+    //private LinearLayout inputLayout;
+    //private IWindowManager windowManager;
     private static readonly char[] separator = [' ', '\n', ','];
     //private static readonly char[] wordSeparator = [' ', /*'\n',*/ ','];
 
@@ -217,5 +220,54 @@ public class MyAccessibilityService : AccessibilityService
     {
         base.OnServiceConnected();
         WeakReferenceMessenger.Default.Send(new AcServiceMessage(("_", null)));
+        // Create the input layout
+        //inputLayout = new LinearLayout(this) { Orientation = Orientation.Vertical };  // Use native LinearLayout
+        //inputLayout.SetBackgroundColor(Android.Graphics.Color.White); // Customize as needed
+
+        //// Create the Entry for input
+        //// Create the EditText for input
+        //EditText inputEditText = new EditText(this) { Hint = "Type here..." };  // Use EditText
+        //inputEditText.RequestFocus();  // Use RequestFocus instead of Focus
+        //inputEditText.TextChanged += (sender, e) =>
+        //{
+        //    // Handle text changes, e.g., send text to other apps
+        //};
+
+        //// Add the EditText to the LinearLayout using AddView
+        //inputLayout.AddView(inputEditText);
+
+        //// Add the Entry to the LinearLayout using AddView
+
+        //// Request the overlay permission (if not already granted)
+        //if (Android.Provider.Settings.CanDrawOverlays(this))
+        //{
+        //    //Intent intent = new Intent(Android.Provider.Settings.ActionManageOverlayPermission,
+        //    //        Android.Net.Uri.Parse("package:" + PackageName));
+        //    //StartActivityForResult(intent, REQUEST_OVERLAY_PERMISSION);
+        //}
+        //else
+        //{
+        //    ShowInputBox();
+        //}
     }
+
+    //private void ShowInputBox()
+    //{
+    //    windowManager = (IWindowManager)GetSystemService(WindowService);
+    //    WindowManagerLayoutParams param = new WindowManagerLayoutParams(
+    //            WindowManagerLayoutParams.WrapContent,
+    //            WindowManagerLayoutParams.WrapContent,
+    //            WindowManagerTypes.AccessibilityOverlay,
+    //            WindowManagerFlags.NotFocusable,
+    //            Android.Graphics.Format.Translucent);
+    //    windowManager.AddView(inputLayout, param);
+    //}
+    //public override bool OnUnbind(Intent intent)
+    //{
+    //    if (inputLayout != null)
+    //    {
+    //        windowManager.RemoveView(inputLayout);
+    //    }
+    //    return base.OnUnbind(intent);
+    //}
 }
