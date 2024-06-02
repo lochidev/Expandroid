@@ -16,8 +16,6 @@ public class MyAccessibilityService : AccessibilityService
 {
     private Dictionary<string, Match> dict;
     private List<Var> globals;
-    //private LinearLayout inputLayout;
-    //private IWindowManager windowManager;
     private static readonly char[] separator = [' ', '\n', ','];
     //private static readonly char[] wordSeparator = [' ', /*'\n',*/ ','];
 
@@ -83,6 +81,17 @@ public class MyAccessibilityService : AccessibilityService
                 if (Text != null)
                 {
                     string og = Text[0].ToString();
+                    const string cursorStr = "$|$";
+                    int startIndex = og.IndexOf(cursorStr);
+                    if(startIndex != -1)
+                    {
+                        Bundle cursorArgs = null;
+                        cursorArgs = new Bundle();
+                        cursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionStartInt, startIndex);
+                        cursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionEndInt, startIndex + cursorStr.Length);
+
+                        e.Source.PerformAction(Android.Views.Accessibility.Action.SetSelection, cursorArgs);
+                    }
                     //quick brown fox
                     var arr = og.Split(separator, StringSplitOptions.RemoveEmptyEntries);
                     bool send = false;
@@ -95,7 +104,7 @@ public class MyAccessibilityService : AccessibilityService
                             // echo, random, clipboard and date only supported
                             string replace = match.Replace;
                             if (match.Word)
-                            { 
+                            {
                                 int index = 0;
                                 for (int i = 0; i < wNum; i++)
                                 {
@@ -143,29 +152,28 @@ public class MyAccessibilityService : AccessibilityService
                     }
                     if (send)
                     {
-                        const string cursorStr = "$|$";
-                        int startIndex = og.IndexOf(cursorStr);
                         Bundle args = new();
                         args.PutCharSequence(AccessibilityNodeInfo.ActionArgumentSetTextCharsequence, og);
-                        Bundle cursorArgs = null;
-                        if (startIndex != -1)
-                        {
-                            //og = og.Replace(cursorStr, " ");
-                            cursorArgs = new Bundle();
-                            cursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionStartInt, startIndex);
-                            cursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionEndInt, startIndex + cursorStr.Length);
-                        }
                         e.Source.PerformAction(Android.Views.Accessibility.Action.SetText, args);
-                        if (cursorArgs is not null)
+                        
+                        if (e.Source.Refresh())
                         {
+                            
+                            //og has been modified with our new expansion
+                            Bundle cursorArgs = null;
+                            cursorArgs = new Bundle();
+                            cursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionStartInt, og.Length);
+                            cursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionEndInt, og.Length);
+
                             e.Source.PerformAction(Android.Views.Accessibility.Action.SetSelection, cursorArgs);
+
                         }
                     }
                 }
             }
 
         }
-        catch (Exception)
+        catch (Exception ex)
         {
 
         }
@@ -220,54 +228,6 @@ public class MyAccessibilityService : AccessibilityService
     {
         base.OnServiceConnected();
         WeakReferenceMessenger.Default.Send(new AcServiceMessage(("_", null)));
-        // Create the input layout
-        //inputLayout = new LinearLayout(this) { Orientation = Orientation.Vertical };  // Use native LinearLayout
-        //inputLayout.SetBackgroundColor(Android.Graphics.Color.White); // Customize as needed
-
-        //// Create the Entry for input
-        //// Create the EditText for input
-        //EditText inputEditText = new EditText(this) { Hint = "Type here..." };  // Use EditText
-        //inputEditText.RequestFocus();  // Use RequestFocus instead of Focus
-        //inputEditText.TextChanged += (sender, e) =>
-        //{
-        //    // Handle text changes, e.g., send text to other apps
-        //};
-
-        //// Add the EditText to the LinearLayout using AddView
-        //inputLayout.AddView(inputEditText);
-
-        //// Add the Entry to the LinearLayout using AddView
-
-        //// Request the overlay permission (if not already granted)
-        //if (Android.Provider.Settings.CanDrawOverlays(this))
-        //{
-        //    //Intent intent = new Intent(Android.Provider.Settings.ActionManageOverlayPermission,
-        //    //        Android.Net.Uri.Parse("package:" + PackageName));
-        //    //StartActivityForResult(intent, REQUEST_OVERLAY_PERMISSION);
-        //}
-        //else
-        //{
-        //    ShowInputBox();
-        //}
     }
 
-    //private void ShowInputBox()
-    //{
-    //    windowManager = (IWindowManager)GetSystemService(WindowService);
-    //    WindowManagerLayoutParams param = new WindowManagerLayoutParams(
-    //            WindowManagerLayoutParams.WrapContent,
-    //            WindowManagerLayoutParams.WrapContent,
-    //            WindowManagerTypes.AccessibilityOverlay,
-    //            WindowManagerFlags.NotFocusable,
-    //            Android.Graphics.Format.Translucent);
-    //    windowManager.AddView(inputLayout, param);
-    //}
-    //public override bool OnUnbind(Intent intent)
-    //{
-    //    if (inputLayout != null)
-    //    {
-    //        windowManager.RemoveView(inputLayout);
-    //    }
-    //    return base.OnUnbind(intent);
-    //}
 }
