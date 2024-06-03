@@ -16,6 +16,10 @@ public class MyAccessibilityService : AccessibilityService
 {
     private Dictionary<string, Match> dict;
     private List<Var> globals;
+    private readonly Bundle CursorArgs = new();
+    private readonly Bundle TextArgs = new();
+    private const string CursorStr = "$|$";
+
     private static readonly char[] separator = [' ', '\n', ','];
     //private static readonly char[] wordSeparator = [' ', /*'\n',*/ ','];
 
@@ -81,18 +85,8 @@ public class MyAccessibilityService : AccessibilityService
                 if (Text != null)
                 {
                     string og = Text[0].ToString();
-                    const string cursorStr = "$|$";
-                    int startIndex = og.IndexOf(cursorStr);
-                    if(startIndex != -1)
-                    {
-                        Bundle cursorArgs = null;
-                        cursorArgs = new Bundle();
-                        cursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionStartInt, startIndex);
-                        cursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionEndInt, startIndex + cursorStr.Length);
-
-                        e.Source.PerformAction(Android.Views.Accessibility.Action.SetSelection, cursorArgs);
-                    }
                     //quick brown fox
+                    CheckAndUpdateCursorArgs(og, sendIfCursorFound: true, e);
                     var arr = og.Split(separator, StringSplitOptions.RemoveEmptyEntries);
                     bool send = false;
 
@@ -152,21 +146,14 @@ public class MyAccessibilityService : AccessibilityService
                     }
                     if (send)
                     {
-                        Bundle args = new();
-                        args.PutCharSequence(AccessibilityNodeInfo.ActionArgumentSetTextCharsequence, og);
-                        e.Source.PerformAction(Android.Views.Accessibility.Action.SetText, args);
-                        
+                        //og has been modified with our new expansion
+                        TextArgs.Remove(AccessibilityNodeInfo.ActionArgumentSetTextCharsequence);
+                        TextArgs.PutCharSequence(AccessibilityNodeInfo.ActionArgumentSetTextCharsequence, og);
+                        e.Source.PerformAction(Android.Views.Accessibility.Action.SetText, TextArgs);
                         if (e.Source.Refresh())
                         {
-                            
-                            //og has been modified with our new expansion
-                            Bundle cursorArgs = null;
-                            cursorArgs = new Bundle();
-                            cursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionStartInt, og.Length);
-                            cursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionEndInt, og.Length);
-
-                            e.Source.PerformAction(Android.Views.Accessibility.Action.SetSelection, cursorArgs);
-
+                            CheckAndUpdateCursorArgs(og, sendIfCursorFound: false, e);
+                            e.Source.PerformAction(Android.Views.Accessibility.Action.SetSelection, CursorArgs);
                         }
                     }
                 }
@@ -178,6 +165,28 @@ public class MyAccessibilityService : AccessibilityService
 
         }
     }
+
+    private void CheckAndUpdateCursorArgs(string og, bool sendIfCursorFound, AccessibilityEvent e)
+    {
+        int startIndex = og.IndexOf(CursorStr);
+        CursorArgs.Remove(AccessibilityNodeInfo.ActionArgumentSelectionStartInt);
+        CursorArgs.Remove(AccessibilityNodeInfo.ActionArgumentSelectionEndInt);
+        if (startIndex != -1)
+        {
+            CursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionStartInt, startIndex);
+            CursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionEndInt, startIndex + CursorStr.Length);
+            if(sendIfCursorFound)
+            {
+                e.Source.PerformAction(Android.Views.Accessibility.Action.SetSelection, CursorArgs);
+            }
+        }
+        else
+        {
+            CursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionStartInt, og.Length);
+            CursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionEndInt, og.Length);
+        }
+    }
+
     private async Task<string> ParseItemAsync(Var item, string replace)
     {
         try
