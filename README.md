@@ -35,7 +35,7 @@ CLI build instructions -> https://learn.microsoft.com/en-us/dotnet/maui/android/
 # Consider donating for work already done if you found this app useful! 💙
 <a href="https://www.buymeacoffee.com/lochi" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-yellow.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
-BTC - 3F7XAkLKeUH8ZhdD2g1zJRsbWer4c4c2bC
+BTC - bc1q0tv7u3yngq3xpmwlu4gzv8rnez27pv3xcsk6t8
 
 LTC - ltc1qjphn23kql69c0ul6qu88sdsf09qxceswt78yey
 
