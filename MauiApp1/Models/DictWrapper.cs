@@ -5,9 +5,17 @@ namespace MauiApp1.Models
     public class DictWrapper
     {
         [JsonPropertyName("globalVars")]
-        public List<Var> global_vars { get; set; }
+        public List<Var> Global_vars { get; set; }
         [JsonPropertyName("matches")]
-        public List<Match> matches { get; set; }
+        public List<Match> Matches { get; set; }
+        public string Form { get; set; }
+        public Dictionary<string, FormOption> Form_Fields { get; set; }
+    }
+    public class FormOption
+    {
+        public bool Multiline { get; set; } = false;
+        public string Type { get; set; } // list or choice
+        public List<string> Values { get; set; }
     }
     public class Match
     {
@@ -55,6 +63,7 @@ namespace MauiApp1.Models
         public string Format { get; set; }
         public long Offset { get; set; } = 0;
         public string Cmd { get; set; }
+        public string Layout { get; set; }
         public List<string> Choices { get; set; }
     }
 }

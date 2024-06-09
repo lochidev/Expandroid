@@ -402,7 +402,7 @@
                     using TextReader tr = new StreamReader(strm);
                     localDict = deserializer.Deserialize<DictWrapper>(tr); // I hate yaml smhhhhhhhhhhhhhhh
                 }
-                foreach (var item in localDict.matches)
+                foreach (var item in localDict.Matches)
                 {
                     if (item.Vars is not null)
                     {
@@ -436,9 +436,9 @@
                     dict[item.Trigger] = item;
                     SendMessage("Add", item);
                 }
-                if (localDict.global_vars is not null)
+                if (localDict.Global_vars is not null)
                 {
-                    globalVars.AddRange(localDict.global_vars);
+                    globalVars.AddRange(localDict.Global_vars);
                     var str = JsonSerializer.Serialize(globalVars);
                     await File.WriteAllTextAsync(AppSettings.GlobalVarsPath, str);
                     WeakReferenceMessenger.Default.Send(new AcGlobalsMessage(globalVars));
@@ -459,13 +459,13 @@
             string name = null;
             DictWrapper dictWrapper = new DictWrapper()
                 {
-                    matches = new List<Match>(),
-                    global_vars = globalVars
+                    Matches = new List<Match>(),
+                    Global_vars = globalVars
                 };
             foreach (var item in dict)
             {
                 item.Value.Replace = item.Value.Replace.Replace("\\n", Environment.NewLine);
-                dictWrapper.matches.Add(item.Value);
+                dictWrapper.Matches.Add(item.Value);
             }
             if (await dialogService.DisplayConfirmAsync("Choose format!", "Select yml if this is an espanso config", "Json", "Yml"))
             {
