@@ -26,9 +26,11 @@ public class MyAccessibilityService : AccessibilityService
     private readonly Bundle CursorArgs = new();
     private readonly Bundle TextArgs = new();
     private const string CursorStr = "$|$";
-
+    private LinearLayout linearLayout;
+    private WindowManagerLayoutParams layoutParams;
+    private Android.Views.View floatView;
+    private IWindowManager windowManager;
     private static readonly char[] separator = [' ', '\n', ','];
-    //private static readonly char[] wordSeparator = [' ', /*'\n',*/ ','];
 
     public override void OnCreate()
     {
@@ -84,6 +86,15 @@ public class MyAccessibilityService : AccessibilityService
     {
         try
         {
+            EditText editText3 = new EditText(this);
+            editText3.Hint = "Text 3";
+            editText3.Id = GenerateViewId(); // Assign a unique ID
+
+            // **Add the EditTexts to the FrameLayout after adding it to window manager**
+            linearLayout.Post(() =>
+            {
+                linearLayout.AddView(editText3);
+            });
             if (e.Source == null)
                 return;
             if (e.Source.ClassName.Equals("android.widget.EditText"))
@@ -240,16 +251,13 @@ public class MyAccessibilityService : AccessibilityService
     {
         //throw new NotImplementedException();
     }
-    private FrameLayout frameLayout;
-    private WindowManagerLayoutParams layoutParams;
-    private Android.Views.View floatView;
-    private IWindowManager windowManager;
+
     protected override void OnServiceConnected()
     {
         base.OnServiceConnected();
         WeakReferenceMessenger.Default.Send(new AcServiceMessage(("_", null)));
-        frameLayout = new FrameLayout(this);
-        // Create a LayoutParams object with appropriate accessibility-friendly attributes
+        linearLayout = new LinearLayout(this);
+        linearLayout.Orientation = Orientation.Vertical;
         layoutParams = new WindowManagerLayoutParams();
         layoutParams.Type = WindowManagerTypes.AccessibilityOverlay;
         layoutParams.Format = Format.Translucent;
@@ -258,18 +266,18 @@ public class MyAccessibilityService : AccessibilityService
         layoutParams.Height = ViewGroup.LayoutParams.WrapContent;
         layoutParams.Gravity = GravityFlags.Top;
         LayoutInflater inflater = LayoutInflater.From(this);
-        floatView = inflater.Inflate(Resource.Layout.floatview, frameLayout);
+        floatView = inflater.Inflate(Resource.Layout.floatview, linearLayout);
         windowManager = GetSystemService(WindowService).JavaCast<IWindowManager>();
-        windowManager.AddView(frameLayout, layoutParams);
+        windowManager.AddView(linearLayout, layoutParams);
     }
 
     public override bool OnUnbind(Intent intent)
     {
         // Remove the overlay when the service is unbound
-        if (frameLayout != null)
+        if (linearLayout != null)
         {
             IWindowManager windowManager = (IWindowManager)GetSystemService(Context.WindowService);
-            windowManager.RemoveView(frameLayout);
+            windowManager.RemoveView(linearLayout);
         }
         return base.OnUnbind(intent);
     }
