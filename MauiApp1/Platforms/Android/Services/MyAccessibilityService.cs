@@ -2,12 +2,19 @@
 using Android.AccessibilityServices;
 using Android.App;
 using Android.Content;
+using Android.Graphics;
 using Android.OS;
+using Android.Runtime;
+using Android.Views;
 using Android.Views.Accessibility;
+using Android.Widget;
 using CommunityToolkit.Mvvm.Messaging;
 using MauiApp1.Models;
+using Microsoft.Maui.Controls;
 using System.Security.Cryptography;
 using System.Text.Json;
+using static Android.Views.View;
+using Resource = Microsoft.Maui.Resource;
 
 [Service(Exported = false, Label = "TextToolsPro", Permission = Manifest.Permission.BindAccessibilityService)]
 [IntentFilter(new[] { "android.accessibilityservice.AccessibilityService" })]
@@ -187,7 +194,7 @@ public class MyAccessibilityService : AccessibilityService
         }
     }
 
-    private async Task<string> ParseItemAsync(Var item, string replace)
+    private static async Task<string> ParseItemAsync(Var item, string replace)
     {
         try
         {
@@ -233,10 +240,37 @@ public class MyAccessibilityService : AccessibilityService
     {
         //throw new NotImplementedException();
     }
+    private FrameLayout frameLayout;
+    private WindowManagerLayoutParams layoutParams;
+    private Android.Views.View floatView;
+    private IWindowManager windowManager;
     protected override void OnServiceConnected()
     {
         base.OnServiceConnected();
         WeakReferenceMessenger.Default.Send(new AcServiceMessage(("_", null)));
+        frameLayout = new FrameLayout(this);
+        // Create a LayoutParams object with appropriate accessibility-friendly attributes
+        layoutParams = new WindowManagerLayoutParams();
+        layoutParams.Type = WindowManagerTypes.AccessibilityOverlay;
+        layoutParams.Format = Format.Translucent;
+        layoutParams.Flags |= WindowManagerFlags.NotFocusable;
+        layoutParams.Width = ViewGroup.LayoutParams.WrapContent;
+        layoutParams.Height = ViewGroup.LayoutParams.WrapContent;
+        layoutParams.Gravity = GravityFlags.Top;
+        LayoutInflater inflater = LayoutInflater.From(this);
+        floatView = inflater.Inflate(Resource.Layout.floatview, frameLayout);
+        windowManager = GetSystemService(WindowService).JavaCast<IWindowManager>();
+        windowManager.AddView(frameLayout, layoutParams);
     }
 
+    public override bool OnUnbind(Intent intent)
+    {
+        // Remove the overlay when the service is unbound
+        if (frameLayout != null)
+        {
+            IWindowManager windowManager = (IWindowManager)GetSystemService(Context.WindowService);
+            windowManager.RemoveView(frameLayout);
+        }
+        return base.OnUnbind(intent);
+    }
 }
