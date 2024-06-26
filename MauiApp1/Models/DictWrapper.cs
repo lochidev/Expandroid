@@ -1,4 +1,6 @@
 ﻿using System.Text.Json.Serialization;
+using YamlDotNet.Core;
+using YamlDotNet.Serialization;
 
 namespace MauiApp1.Models
 {
@@ -8,8 +10,6 @@ namespace MauiApp1.Models
         public List<Var> Global_vars { get; set; }
         [JsonPropertyName("matches")]
         public List<Match> Matches { get; set; }
-        public string Form { get; set; }
-        public Dictionary<string, FormOption> Form_Fields { get; set; }
     }
     public class FormOption
     {
@@ -29,10 +29,15 @@ namespace MauiApp1.Models
             Replace = og.Replace;
             Vars = new(og.Vars);
             Word = og.Word;
+            Form = og.Form;
+            Form_Fields = og.Form_Fields;
         }
         public string Trigger { get; set; }
         public string Replace { get; set; }
         public List<Var> Vars { get; set; }
+        //[YamlMember(ScalarStyle = ScalarStyle.Literal)]
+        public string Form { get; set; }
+        public Dictionary<string, FormOption> Form_Fields { get; set; }
         public bool Word { get; set; } = false;
     }
     public class Var

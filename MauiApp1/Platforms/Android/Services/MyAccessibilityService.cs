@@ -86,15 +86,15 @@ public class MyAccessibilityService : AccessibilityService
     {
         try
         {
-            EditText editText3 = new EditText(this);
-            editText3.Hint = "Text 3";
-            editText3.Id = GenerateViewId(); // Assign a unique ID
+            //EditText editText3 = new EditText(this);
+            //editText3.Hint = "Text 3";
+            //editText3.Id = GenerateViewId(); // Assign a unique ID
 
-            // **Add the EditTexts to the FrameLayout after adding it to window manager**
-            linearLayout.Post(() =>
-            {
-                linearLayout.AddView(editText3);
-            });
+            //// **Add the EditTexts to the FrameLayout after adding it to window manager**
+            //linearLayout.Post(() =>
+            //{
+            //    linearLayout.AddView(editText3);
+            //});
             if (e.Source == null)
                 return;
             if (e.Source.ClassName.Equals("android.widget.EditText"))
