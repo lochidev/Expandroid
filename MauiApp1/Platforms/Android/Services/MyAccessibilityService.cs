@@ -30,7 +30,9 @@ public class MyAccessibilityService : AccessibilityService
     private WindowManagerLayoutParams layoutParams;
     private Android.Views.View floatView;
     private IWindowManager windowManager;
-    private static readonly char[] separator = [' ', '\n', ','];
+    private static readonly string[] _separators = [" ", "\n", "\r\n", " ,"];
+    private static readonly string[] _formSeparators = [" ", "\n", "\r\n", "|"];
+
 
     public override void OnCreate()
     {
@@ -105,7 +107,7 @@ public class MyAccessibilityService : AccessibilityService
                     string og = Text[0].ToString();
                     //quick brown fox
                     CheckAndUpdateCursorArgs(og, sendIfCursorFound: true, e);
-                    var arr = og.Split(separator, StringSplitOptions.RemoveEmptyEntries);
+                    var arr = og.Split(_separators, StringSplitOptions.RemoveEmptyEntries);
                     bool send = false;
 
                     for (int wNum = 0; wNum < arr.Length; wNum++)
@@ -114,6 +116,9 @@ public class MyAccessibilityService : AccessibilityService
                         if (dict.TryGetValue(text, out var match))
                         {
                             // echo, random, clipboard and date only supported
+                            if (!string.IsNullOrEmpty(match.Form)) {
+                                string[] formLines = match.Form.Split(_formSeparators, StringSplitOptions.RemoveEmptyEntries);
+                            }
                             string replace = match.Replace;
                             if (match.Word)
                             {
@@ -124,13 +129,13 @@ public class MyAccessibilityService : AccessibilityService
                                 }
                                 var start = og.IndexOf(text, index);
                                 //check the start
-                                if (start != 0 && !separator.Contains(og[start - 1]))
+                                if (start != 0 && !_separators.Contains(og[start - 1].ToString()))
                                 {
                                     break;
                                 }
                                 //check the end
                                 var end = start + text.Length;
-                                if ((end) <= og.Length && !separator.Contains(og[end]))
+                                if ((end) <= og.Length && !_separators.Contains(og[end].ToString()))
                                 {
                                     break;
                                 }
