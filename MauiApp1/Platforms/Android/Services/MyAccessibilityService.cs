@@ -116,7 +116,8 @@ public class MyAccessibilityService : AccessibilityService
                         if (dict.TryGetValue(text, out var match))
                         {
                             // echo, random, clipboard and date only supported
-                            if (!string.IsNullOrEmpty(match.Form)) {
+                            if (!string.IsNullOrEmpty(match.Form))
+                            {
                                 string[] formLines = match.Form.Split(_formSeparators, StringSplitOptions.RemoveEmptyEntries);
                             }
                             string replace = match.Replace;
@@ -198,7 +199,7 @@ public class MyAccessibilityService : AccessibilityService
         {
             CursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionStartInt, startIndex);
             CursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionEndInt, startIndex + CursorStr.Length);
-            if(sendIfCursorFound)
+            if (sendIfCursorFound)
             {
                 e.Source.PerformAction(Android.Views.Accessibility.Action.SetSelection, CursorArgs);
             }
@@ -272,8 +273,16 @@ public class MyAccessibilityService : AccessibilityService
         layoutParams.Gravity = GravityFlags.Top;
         LayoutInflater inflater = LayoutInflater.From(this);
         floatView = inflater.Inflate(Resource.Layout.floatview, linearLayout);
-        windowManager = GetSystemService(WindowService).JavaCast<IWindowManager>();
-        windowManager.AddView(linearLayout, layoutParams);
+        var imgButton = floatView.FindViewById<Android.Widget.ImageButton>(Resource.Id.close_button);
+        if (imgButton != null)
+        {
+            imgButton.Click += (sender, e) =>
+            {
+                windowManager.RemoveView(linearLayout);
+            };
+            windowManager = GetSystemService(WindowService).JavaCast<IWindowManager>();
+            windowManager.AddView(linearLayout, layoutParams);
+        }
     }
 
     public override bool OnUnbind(Intent intent)
