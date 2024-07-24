@@ -1,25 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-   android:orientation="horizontal"
-   android:layout_width="wrap_content"
-   android:layout_height="match_parent">
-
- <ImageView
-    android:id="@+id/iv1"
-    android:src="@android:drawable/ic_media_play"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
     android:layout_width="wrap_content"
-    android:layout_height="wrap_content"/>
- <ImageView
-    android:id="@+id/iv2"
-    android:src="@android:drawable/star_on"
-    android:layout_marginLeft="10dp"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"/>
-  <ImageView
-    android:id="@+id/iv3"
-    android:src="@android:drawable/ic_menu_more"
-    android:layout_marginLeft="10dp"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"/>
-
+    android:layout_height="wrap_content"
+    android:background="@color/abc_hint_foreground_material_dark"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:background="@color/m3_ref_palette_white"
+        android:paddingLeft="2dp">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/form_title"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/abc_action_bar_content_inset_material"
+            />
+        <ImageButton
+            android:id="@+id/close_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/ic_m3_chip_close"
+            android:contentDescription="@string/mtrl_chip_close_icon_content_description"
+            />
+    </LinearLayout>
 </LinearLayout>
