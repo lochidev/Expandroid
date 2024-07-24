@@ -31,7 +31,9 @@ public class MyAccessibilityService : AccessibilityService
     private Android.Views.View floatView;
     private IWindowManager windowManager;
     private static readonly string[] _separators = [" ", "\n", "\r\n", " ,"];
-    private static readonly string[] _formSeparators = [" ", "\n", "\r\n", "|"];
+    private static readonly string[] _formSeparators = [" ", "|", "\r\n", "\n"];
+    private static readonly string[] _lineSeparators = ["\r\n", "\n"];
+
 
 
     public override void OnCreate()
@@ -44,7 +46,7 @@ public class MyAccessibilityService : AccessibilityService
             var item = m.Value.Item2;
             if (cmd == "Add")
             {
-                if (!(string.IsNullOrEmpty(item.Trigger) || string.IsNullOrEmpty(item.Replace)))
+                if (!string.IsNullOrEmpty(item.Form) || !(string.IsNullOrEmpty(item.Trigger) || string.IsNullOrEmpty(item.Replace)))
                 {
                     //dict.AddOrUpdate(item.Trigger, item,
                     //(key, oldValue) => item);
@@ -91,12 +93,6 @@ public class MyAccessibilityService : AccessibilityService
             //EditText editText3 = new EditText(this);
             //editText3.Hint = "Text 3";
             //editText3.Id = GenerateViewId(); // Assign a unique ID
-
-            //// **Add the EditTexts to the FrameLayout after adding it to window manager**
-            //linearLayout.Post(() =>
-            //{
-            //    linearLayout.AddView(editText3);
-            //});
             if (e.Source == null)
                 return;
             if (e.Source.ClassName.Equals("android.widget.EditText"))
@@ -118,53 +114,89 @@ public class MyAccessibilityService : AccessibilityService
                             // echo, random, clipboard and date only supported
                             if (!string.IsNullOrEmpty(match.Form))
                             {
-                                string[] formLines = match.Form.Split(_formSeparators, StringSplitOptions.RemoveEmptyEntries);
+                                string[] formLines = match.Form.Split(_lineSeparators, StringSplitOptions.RemoveEmptyEntries);
+                                foreach (string line in formLines)
+                                {
+                                    string[] words = line.Split(_formSeparators, StringSplitOptions.RemoveEmptyEntries);
+                                    if (words.Length > 0)
+                                    {
+                                        LinearLayout row = new(BaseContext)
+                                        {
+                                            Orientation = Orientation.Horizontal
+                                        };
+                                        foreach (string word in words)
+                                        {
+                                            if (word[0..1] == "[[")
+                                            {
+
+                                            }
+                                            else
+                                            {
+                                                row.Post(() =>
+                                                {
+                                                    row.AddView(new TextView(BaseContext)
+                                                    {
+                                                        Text = word,
+                                                    });
+                                                });
+                                                linearLayout.Post(() =>
+                                                {
+                                                    linearLayout.AddView(row);
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                                windowManager.AddView(linearLayout, layoutParams);
                             }
-                            string replace = match.Replace;
-                            if (match.Word)
+                            else
                             {
-                                int index = 0;
-                                for (int i = 0; i < wNum; i++)
+                                string replace = match.Replace;
+                                if (match.Word)
                                 {
-                                    index += arr[0].Length;
+                                    int index = 0;
+                                    for (int i = 0; i < wNum; i++)
+                                    {
+                                        index += arr[0].Length;
+                                    }
+                                    var start = og.IndexOf(text, index);
+                                    //check the start
+                                    if (start != 0 && !_separators.Contains(og[start - 1].ToString()))
+                                    {
+                                        break;
+                                    }
+                                    //check the end
+                                    var end = start + text.Length;
+                                    if ((end) <= og.Length && !_separators.Contains(og[end].ToString()))
+                                    {
+                                        break;
+                                    }
                                 }
-                                var start = og.IndexOf(text, index);
-                                //check the start
-                                if (start != 0 && !_separators.Contains(og[start - 1].ToString()))
+                                if (globals is not null)
                                 {
-                                    break;
+                                    foreach (var item in globals)
+                                    {
+                                        replace = await ParseItemAsync(item, replace);
+                                    }
                                 }
-                                //check the end
-                                var end = start + text.Length;
-                                if ((end) <= og.Length && !_separators.Contains(og[end].ToString()))
+                                if (match.Vars is not null && match.Vars.Count > 0)
                                 {
-                                    break;
+                                    foreach (var item in match.Vars)
+                                    {
+                                        replace = await ParseItemAsync(item, replace);
+                                    }
                                 }
-                            }
-                            if (globals is not null)
-                            {
-                                foreach (var item in globals)
+                                if (replace is not null)
                                 {
-                                    replace = await ParseItemAsync(item, replace);
+                                    int index = 0;
+                                    for (int i = 0; i < wNum; i++)
+                                    {
+                                        index += arr[i].Length;
+                                    }
+                                    var end = og[index..].Replace(text, replace);
+                                    og = og[..index] + end;
+                                    send = true;
                                 }
-                            }
-                            if (match.Vars is not null && match.Vars.Count > 0)
-                            {
-                                foreach (var item in match.Vars)
-                                {
-                                    replace = await ParseItemAsync(item, replace);
-                                }
-                            }
-                            if (replace is not null)
-                            {
-                                int index = 0;
-                                for (int i = 0; i < wNum; i++)
-                                {
-                                    index += arr[i].Length;
-                                }
-                                var end = og[index..].Replace(text, replace);
-                                og = og[..index] + end;
-                                send = true;
                             }
                         }
                     }
