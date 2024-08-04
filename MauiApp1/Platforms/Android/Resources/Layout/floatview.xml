@@ -6,19 +6,23 @@
     android:layout_height="wrap_content"
     android:id="@+id/rowContainer"
     android:background="@color/m3_ref_palette_white"
-    
+    android:paddingLeft="4dp"
+    android:paddingBottom="3dp"
+    android:paddingTop="3dp"
+    android:paddingRight="2dp"
     >
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
-        android:paddingLeft="2dp">
+        >
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/form_title"
             android:textColor="@android:color/black"
             android:textSize="@dimen/abc_action_bar_content_inset_material"
+            android:paddingTop="9dp"
             />
         <ImageButton
             android:id="@+id/close_button"

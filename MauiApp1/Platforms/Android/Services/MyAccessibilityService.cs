@@ -14,12 +14,13 @@ using Microsoft.Maui.Controls;
 using System.Security.Cryptography;
 using System.Text.Json;
 using static Android.Views.View;
+using static MudBlazor.Colors;
 using Resource = Microsoft.Maui.Resource;
 
 [Service(Exported = false, Label = "TextToolsPro", Permission = Manifest.Permission.BindAccessibilityService)]
 [IntentFilter(new[] { "android.accessibilityservice.AccessibilityService" })]
 [MetaData("android.accessibilityservice", Resource = "@xml/accessibility_service")]
-public class MyAccessibilityService : AccessibilityService
+public class MyAccessibilityService : AccessibilityService, Android.Views.View.IOnTouchListener
 {
     private Dictionary<string, Match> dict;
     private List<Var> globals;
@@ -334,7 +335,7 @@ public class MyAccessibilityService : AccessibilityService
             };
             windowManager = GetSystemService(WindowService).JavaCast<IWindowManager>();
             windowManager.AddView(floatView, layoutParams);
-
+            floatView.SetOnTouchListener(this);
         }
     }
 
@@ -347,5 +348,32 @@ public class MyAccessibilityService : AccessibilityService
             windowManager.RemoveView(floatView);
         }
         return base.OnUnbind(intent);
+    }
+    private float xDown, yDown;
+    public bool OnTouch(Android.Views.View v, MotionEvent e)
+    {
+        var action = e.Action;
+
+        switch (action)
+        {
+            case MotionEventActions.Down:
+                xDown = e.RawX;
+                yDown = e.RawY;
+                return true;
+            case MotionEventActions.Move:
+                float deltaX = e.RawX - xDown;
+                float deltaY = e.RawY - yDown;
+
+                layoutParams.X += (int)deltaX;
+                layoutParams.Y += (int)deltaY;
+
+                windowManager.UpdateViewLayout(floatView, layoutParams);
+
+                xDown = e.RawX;
+                yDown = e.RawY;
+                return true;
+            default:
+                return false;
+        }
     }
 }
