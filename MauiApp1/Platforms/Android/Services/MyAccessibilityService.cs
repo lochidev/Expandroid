@@ -26,7 +26,6 @@ public class MyAccessibilityService : AccessibilityService
     private readonly Bundle CursorArgs = new();
     private readonly Bundle TextArgs = new();
     private const string CursorStr = "$|$";
-    private LinearLayout linearLayout;
     private WindowManagerLayoutParams layoutParams;
     private Android.Views.View floatView;
     private IWindowManager windowManager;
@@ -117,37 +116,47 @@ public class MyAccessibilityService : AccessibilityService
                                 string[] formLines = match.Form.Split(_lineSeparators, StringSplitOptions.RemoveEmptyEntries);
                                 foreach (string line in formLines)
                                 {
-                                    string[] words = line.Split(_formSeparators, StringSplitOptions.RemoveEmptyEntries);
-                                    if (words.Length > 0)
+                                    LinearLayout row = new(BaseContext)
                                     {
-                                        LinearLayout row = new(BaseContext)
+                                        Orientation = Orientation.Horizontal
+                                    };
+                                    if (line.Contains("[["))
+                                    {
+                                        string[] words = line.Split(_formSeparators, StringSplitOptions.RemoveEmptyEntries);
+                                        if (words.Length > 0)
                                         {
-                                            Orientation = Orientation.Horizontal
-                                        };
-                                        foreach (string word in words)
-                                        {
-                                            if (word[0..1] == "[[")
+                                            foreach (string word in words)
                                             {
-
-                                            }
-                                            else
-                                            {
-                                                row.Post(() =>
+                                                if (word.StartsWith("[["))
                                                 {
-                                                    row.AddView(new TextView(BaseContext)
+                                                    var endIndex = word.IndexOf(']');
+                                                    var placeholderStr = word[2..endIndex];
+                                                    row.Post(() =>
                                                     {
-                                                        Text = word,
+                                                        row.AddView(new EditText(BaseContext)
+                                                        {
+                                                            Hint = placeholderStr,
+                                                        });
                                                     });
-                                                });
-                                                linearLayout.Post(() =>
+                                                }
+                                                else
                                                 {
-                                                    linearLayout.AddView(row);
-                                                });
+                                                    AddTextView(row, word);
+                                                }
                                             }
                                         }
                                     }
+                                    else
+                                    {
+                                        AddTextView(row, line);
+                                    }
+                                    LinearLayout rowContainer = floatView.FindViewById<LinearLayout>(Resource.Id.rowContainer);
+                                    rowContainer.Post(() =>
+                                    {
+                                        rowContainer.AddView(row);
+                                    });
                                 }
-                                windowManager.AddView(linearLayout, layoutParams);
+                                windowManager.AddView(floatView, layoutParams);
                             }
                             else
                             {
@@ -222,6 +231,17 @@ public class MyAccessibilityService : AccessibilityService
         }
     }
 
+    private void AddTextView(LinearLayout row, string word)
+    {
+        row.Post(() =>
+        {
+            row.AddView(new TextView(BaseContext)
+            {
+                Text = word,
+            });
+        });
+    }
+
     private void CheckAndUpdateCursorArgs(string og, bool sendIfCursorFound, AccessibilityEvent e)
     {
         int startIndex = og.IndexOf(CursorStr);
@@ -294,7 +314,7 @@ public class MyAccessibilityService : AccessibilityService
     {
         base.OnServiceConnected();
         WeakReferenceMessenger.Default.Send(new AcServiceMessage(("_", null)));
-        linearLayout = new LinearLayout(this);
+        var linearLayout = new LinearLayout(this);
         linearLayout.Orientation = Orientation.Vertical;
         layoutParams = new WindowManagerLayoutParams();
         layoutParams.Type = WindowManagerTypes.AccessibilityOverlay;
@@ -305,25 +325,26 @@ public class MyAccessibilityService : AccessibilityService
         layoutParams.Gravity = GravityFlags.Top;
         LayoutInflater inflater = LayoutInflater.From(this);
         floatView = inflater.Inflate(Resource.Layout.floatview, linearLayout);
-        var imgButton = floatView.FindViewById<Android.Widget.ImageButton>(Resource.Id.close_button);
-        if (imgButton != null)
+        var closeBtn = floatView.FindViewById<Android.Widget.ImageButton>(Resource.Id.close_button);
+        if (closeBtn != null)
         {
-            imgButton.Click += (sender, e) =>
+            closeBtn.Click += (sender, e) =>
             {
-                windowManager.RemoveView(linearLayout);
+                windowManager.RemoveView(floatView);
             };
             windowManager = GetSystemService(WindowService).JavaCast<IWindowManager>();
-            windowManager.AddView(linearLayout, layoutParams);
+            windowManager.AddView(floatView, layoutParams);
+
         }
     }
 
     public override bool OnUnbind(Intent intent)
     {
         // Remove the overlay when the service is unbound
-        if (linearLayout != null)
+        if (floatView != null)
         {
             IWindowManager windowManager = (IWindowManager)GetSystemService(Context.WindowService);
-            windowManager.RemoveView(linearLayout);
+            windowManager.RemoveView(floatView);
         }
         return base.OnUnbind(intent);
     }

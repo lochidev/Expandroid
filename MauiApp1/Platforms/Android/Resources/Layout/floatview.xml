@@ -4,13 +4,14 @@
     android:orientation="vertical"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:background="@color/abc_hint_foreground_material_dark"
+    android:id="@+id/rowContainer"
+    android:background="@color/m3_ref_palette_white"
+    
     >
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
-        android:background="@color/m3_ref_palette_white"
         android:paddingLeft="2dp">
         <TextView
             android:layout_width="wrap_content"
