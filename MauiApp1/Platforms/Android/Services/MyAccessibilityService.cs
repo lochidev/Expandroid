@@ -106,110 +106,96 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
                     var arr = og.Split(_separators, StringSplitOptions.RemoveEmptyEntries);
                     bool send = false;
 
-                    for (int wNum = 0; wNum < arr.Length; wNum++)
+                    //for (int wNum = 0; wNum < arr.Length; wNum++)
+                    //{
+                    var text = arr[^1];
+                    if (dict.TryGetValue(text, out var match))
                     {
-                        var text = arr[wNum];
-                        if (dict.TryGetValue(text, out var match))
+                        // echo, random, clipboard and date only supported
+                        if (!string.IsNullOrEmpty(match.Form))
                         {
-                            // echo, random, clipboard and date only supported
-                            if (!string.IsNullOrEmpty(match.Form))
+                            string[] formLines = match.Form.Split(_lineSeparators, StringSplitOptions.RemoveEmptyEntries);
+                            foreach (string line in formLines)
                             {
-                                string[] formLines = match.Form.Split(_lineSeparators, StringSplitOptions.RemoveEmptyEntries);
-                                foreach (string line in formLines)
+                                LinearLayout row = new(BaseContext)
                                 {
-                                    LinearLayout row = new(BaseContext)
+                                    Orientation = Orientation.Horizontal
+                                };
+                                if (line.Contains("[["))
+                                {
+                                    string[] words = line.Split(_formSeparators, StringSplitOptions.RemoveEmptyEntries);
+                                    if (words.Length > 0)
                                     {
-                                        Orientation = Orientation.Horizontal
-                                    };
-                                    if (line.Contains("[["))
-                                    {
-                                        string[] words = line.Split(_formSeparators, StringSplitOptions.RemoveEmptyEntries);
-                                        if (words.Length > 0)
+                                        foreach (string word in words)
                                         {
-                                            foreach (string word in words)
+                                            if (word.StartsWith("[["))
                                             {
-                                                if (word.StartsWith("[["))
+                                                var endIndex = word.IndexOf(']');
+                                                var placeholderStr = word[2..endIndex];
+                                                row.Post(() =>
                                                 {
-                                                    var endIndex = word.IndexOf(']');
-                                                    var placeholderStr = word[2..endIndex];
-                                                    row.Post(() =>
+                                                    var et = new EditText(BaseContext)
                                                     {
-                                                        row.AddView(new EditText(BaseContext)
-                                                        {
-                                                            Hint = placeholderStr,
-                                                        });
-                                                    });
-                                                }
-                                                else
-                                                {
-                                                    AddTextView(row, word);
-                                                }
+                                                        Hint = placeholderStr
+                                                    };
+                                                    if (match.Form_Fields is not null)
+                                                        et.SetMinLines(match.Form_Fields[placeholderStr].Multiline ? 5 : 1);
+                                                    row.AddView(et);
+                                                });
+                                            }
+                                            else
+                                            {
+                                                AddTextView(row, word);
                                             }
                                         }
                                     }
-                                    else
-                                    {
-                                        AddTextView(row, line);
-                                    }
-                                    LinearLayout rowContainer = floatView.FindViewById<LinearLayout>(Resource.Id.rowContainer);
-                                    rowContainer.Post(() =>
-                                    {
-                                        rowContainer.AddView(row);
-                                    });
                                 }
-                                windowManager.AddView(floatView, layoutParams);
+                                else
+                                {
+                                    AddTextView(row, line);
+                                }
+                                LinearLayout rowContainer = floatView.FindViewById<LinearLayout>(Resource.Id.rowContainer);
+                                rowContainer.Post(() =>
+                                {
+                                    rowContainer.AddView(row);
+                                });
                             }
-                            else
+                            windowManager.AddView(floatView, layoutParams);
+                        }
+                        else
+                        {
+                            string replace = match.Replace;
+                            var triggerIndex = og.IndexOf(text);
+                            if (match.Word)
                             {
-                                string replace = match.Replace;
-                                if (match.Word)
+                                if (!_separators.Contains(og[triggerIndex - 1].ToString()))
                                 {
-                                    int index = 0;
-                                    for (int i = 0; i < wNum; i++)
-                                    {
-                                        index += arr[0].Length;
-                                    }
-                                    var start = og.IndexOf(text, index);
-                                    //check the start
-                                    if (start != 0 && !_separators.Contains(og[start - 1].ToString()))
-                                    {
-                                        break;
-                                    }
-                                    //check the end
-                                    var end = start + text.Length;
-                                    if ((end) <= og.Length && !_separators.Contains(og[end].ToString()))
-                                    {
-                                        break;
-                                    }
+                                    return;
                                 }
-                                if (globals is not null)
+                            }
+                            if (globals is not null)
+                            {
+                                foreach (var item in globals)
                                 {
-                                    foreach (var item in globals)
-                                    {
-                                        replace = await ParseItemAsync(item, replace);
-                                    }
+                                    replace = await ParseItemAsync(item, replace);
                                 }
-                                if (match.Vars is not null && match.Vars.Count > 0)
+                            }
+                            if (match.Vars is not null && match.Vars.Count > 0)
+                            {
+                                foreach (var item in match.Vars)
                                 {
-                                    foreach (var item in match.Vars)
-                                    {
-                                        replace = await ParseItemAsync(item, replace);
-                                    }
+                                    replace = await ParseItemAsync(item, replace);
                                 }
-                                if (replace is not null)
-                                {
-                                    int index = 0;
-                                    for (int i = 0; i < wNum; i++)
-                                    {
-                                        index += arr[i].Length;
-                                    }
-                                    var end = og[index..].Replace(text, replace);
-                                    og = og[..index] + end;
-                                    send = true;
-                                }
+                            }
+                            if (replace is not null)
+                            {
+                                var end = og[triggerIndex..].Replace(text, replace);
+                                og = og[..triggerIndex] + end;
+                                send = true;
                             }
                         }
                     }
+                    //}
                     if (send)
                     {
                         //og has been modified with our new expansion
