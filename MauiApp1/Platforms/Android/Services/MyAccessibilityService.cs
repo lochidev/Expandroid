@@ -12,6 +12,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using MauiApp1.Models;
 using Microsoft.Maui.Controls;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json;
 using static Android.Views.View;
 using static MudBlazor.Colors;
@@ -100,75 +101,123 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
                 var Text = e.Text;
                 if (Text != null)
                 {
-                    string og = Text[0].ToString();
+                    string expansionStr = Text[0].ToString();
+                    string og = expansionStr;
                     //quick brown fox
-                    CheckAndUpdateCursorArgs(og, sendIfCursorFound: true, e);
-                    var arr = og.Split(_separators, StringSplitOptions.RemoveEmptyEntries);
+                    CheckAndUpdateCursorArgs(expansionStr, sendIfCursorFound: true, e);
+                    var arr = expansionStr.Split(_separators, StringSplitOptions.RemoveEmptyEntries);
                     bool send = false;
-
+                    bool storeOg = true;
                     //for (int wNum = 0; wNum < arr.Length; wNum++)
                     //{
                     var text = arr[^1];
-                    if (dict.TryGetValue(text, out var match))
+                    if (previousOg == og)
+                    {
+                        return;
+                    }
+                    else if (previousExpansion != "" && previousExpansion[..^1] == og)
+                    {
+                        expansionStr = previousOg;
+                        storeOg = false;
+                        send = true;
+                    }
+                    else if (dict.TryGetValue(text, out var match))
                     {
                         // echo, random, clipboard and date only supported
-                        if (!string.IsNullOrEmpty(match.Form))
-                        {
-                            string[] formLines = match.Form.Split(_lineSeparators, StringSplitOptions.RemoveEmptyEntries);
-                            foreach (string line in formLines)
-                            {
-                                LinearLayout row = new(BaseContext)
-                                {
-                                    Orientation = Orientation.Horizontal
-                                };
-                                if (line.Contains("[["))
-                                {
-                                    string[] words = line.Split(_formSeparators, StringSplitOptions.RemoveEmptyEntries);
-                                    if (words.Length > 0)
-                                    {
-                                        foreach (string word in words)
-                                        {
-                                            if (word.StartsWith("[["))
-                                            {
-                                                var endIndex = word.IndexOf(']');
-                                                var placeholderStr = word[2..endIndex];
-                                                row.Post(() =>
-                                                {
-                                                    var et = new EditText(BaseContext)
-                                                    {
-                                                        Hint = placeholderStr
-                                                    };
-                                                    if (match.Form_Fields is not null)
-                                                        et.SetMinLines(match.Form_Fields[placeholderStr].Multiline ? 5 : 1);
-                                                    row.AddView(et);
-                                                });
-                                            }
-                                            else
-                                            {
-                                                AddTextView(row, word);
-                                            }
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    AddTextView(row, line);
-                                }
-                                LinearLayout rowContainer = floatView.FindViewById<LinearLayout>(Resource.Id.rowContainer);
-                                rowContainer.Post(() =>
-                                {
-                                    rowContainer.AddView(row);
-                                });
-                            }
-                            windowManager.AddView(floatView, layoutParams);
-                        }
-                        else
+                        //if (!string.IsNullOrEmpty(match.Form))
+                        //{
+                        //    string[] formLines = match.Form.Split(_lineSeparators, StringSplitOptions.RemoveEmptyEntries);
+                        //    var replaceDict = new Dictionary<string, string>();
+                        //    foreach (string line in formLines)
+                        //    {
+                        //        LinearLayout row = new(BaseContext)
+                        //        {
+                        //            Orientation = Orientation.Horizontal
+                        //        };
+                        //        if (line.Contains("[["))
+                        //        {
+                        //            string[] words = line.Split(_formSeparators, StringSplitOptions.RemoveEmptyEntries);
+                        //            if (words.Length > 0)
+                        //            {
+                        //                foreach (string word in words)
+                        //                {
+                        //                    if (word.StartsWith("[["))
+                        //                    {
+                        //                        var endIndex = word.IndexOf(']');
+                        //                        var placeholderStr = word[2..endIndex];
+                        //                        row.Post(() =>
+                        //                        {
+                        //                            var et = new EditText(BaseContext)
+                        //                            {
+                        //                                Hint = placeholderStr
+                        //                            };
+
+                        //                            et.TextChanged += (sender, e) =>
+                        //                            {
+                        //                                var text = e.Text.ToString();
+                        //                                if (!replaceDict.TryAdd(placeholderStr, text))
+                        //                                {
+                        //                                    replaceDict[placeholderStr] = text;
+                        //                                }
+                        //                            };
+                        //                            if (match.Form_Fields is not null)
+                        //                                et.SetMinLines(match.Form_Fields[placeholderStr].Multiline ? 5 : 1);
+                        //                            row.AddView(et);
+                        //                        });
+                        //                    }
+                        //                    else
+                        //                    {
+                        //                        AddTextView(row, word);
+                        //                    }
+                        //                }
+                        //            }
+                        //        }
+                        //        else
+                        //        {
+                        //            AddTextView(row, line);
+                        //        }
+                        //        rowContainer.Post(() =>
+                        //        {
+                        //            rowContainer.AddView(row);
+                        //        });
+                        //    }
+                        //    var submitButton = new Android.Widget.Button(BaseContext)
+                        //    {
+                        //        Text = "Submit",
+                        //    };
+                        //    submitButton.Click += (sender, ea) =>
+                        //    {
+                        //        // Replace all occurrences of keys with values
+                        //        foreach (var item in replaceDict)
+                        //        {
+                        //            string key = $"[[{item.Key}]]";
+                        //            match.Form = match.Form.Replace(key, item.Value);
+                        //        }
+                        //        AccessibilityNodeInfo rootNode = GetRootInActiveWindow(0);
+
+                        //    };
+                        //    rowContainer.Post(() =>
+                        //    {
+                        //        rowContainer.AddView(submitButton);
+                        //    });
+                        //    windowManager.AddView(floatView, layoutParams);
+                        //}
+                        //else
                         {
                             string replace = match.Replace;
-                            var triggerIndex = og.IndexOf(text);
+                            var triggerIndex = expansionStr.IndexOf(text);
                             if (match.Word)
                             {
-                                if (!_separators.Contains(og[triggerIndex - 1].ToString()))
+                                //check the start
+                                if (triggerIndex == 0)
+                                {
+                                    if (!_separators.Contains(expansionStr[triggerIndex + text.Length].ToString()))
+                                    {
+                                        return;
+                                    }
+                                }
+                                //check the start and end
+                                else if (!_separators.Contains(expansionStr[triggerIndex - 1].ToString()) || !_separators.Contains(expansionStr[triggerIndex + text.Length].ToString()))
                                 {
                                     return;
                                 }
@@ -189,8 +238,8 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
                             }
                             if (replace is not null)
                             {
-                                var end = og[triggerIndex..].Replace(text, replace);
-                                og = og[..triggerIndex] + end;
+                                var end = expansionStr[triggerIndex..].Replace(text, replace);
+                                expansionStr = expansionStr[..triggerIndex] + end;
                                 send = true;
                             }
                         }
@@ -199,13 +248,16 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
                     if (send)
                     {
                         //og has been modified with our new expansion
-                        TextArgs.Remove(AccessibilityNodeInfo.ActionArgumentSetTextCharsequence);
-                        TextArgs.PutCharSequence(AccessibilityNodeInfo.ActionArgumentSetTextCharsequence, og);
-                        e.Source.PerformAction(Android.Views.Accessibility.Action.SetText, TextArgs);
-                        if (e.Source.Refresh())
+                        DoExpansion(e, expansionStr);
+                        if (storeOg)
                         {
-                            CheckAndUpdateCursorArgs(og, sendIfCursorFound: false, e);
-                            e.Source.PerformAction(Android.Views.Accessibility.Action.SetSelection, CursorArgs);
+                            previousOg = og;
+                            previousExpansion = expansionStr;
+                        }
+                        else
+                        {
+                            previousOg = "";
+                            previousExpansion = "";
                         }
                     }
                 }
@@ -215,6 +267,18 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
         catch (Exception ex)
         {
 
+        }
+    }
+
+    private void DoExpansion(AccessibilityEvent e, string og)
+    {
+        TextArgs.Remove(AccessibilityNodeInfo.ActionArgumentSetTextCharsequence);
+        TextArgs.PutCharSequence(AccessibilityNodeInfo.ActionArgumentSetTextCharsequence, og);
+        e.Source.PerformAction(Android.Views.Accessibility.Action.SetText, TextArgs);
+        if (e.Source.Refresh())
+        {
+            CheckAndUpdateCursorArgs(og, sendIfCursorFound: false, e);
+            e.Source.PerformAction(Android.Views.Accessibility.Action.SetSelection, CursorArgs);
         }
     }
 
@@ -301,41 +365,45 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
     {
         base.OnServiceConnected();
         WeakReferenceMessenger.Default.Send(new AcServiceMessage(("_", null)));
-        var linearLayout = new LinearLayout(this);
-        linearLayout.Orientation = Orientation.Vertical;
-        layoutParams = new WindowManagerLayoutParams();
-        layoutParams.Type = WindowManagerTypes.AccessibilityOverlay;
-        layoutParams.Format = Format.Translucent;
-        layoutParams.Flags |= WindowManagerFlags.NotFocusable;
-        layoutParams.Width = ViewGroup.LayoutParams.WrapContent;
-        layoutParams.Height = ViewGroup.LayoutParams.WrapContent;
-        layoutParams.Gravity = GravityFlags.Top;
-        LayoutInflater inflater = LayoutInflater.From(this);
-        floatView = inflater.Inflate(Resource.Layout.floatview, linearLayout);
-        var closeBtn = floatView.FindViewById<Android.Widget.ImageButton>(Resource.Id.close_button);
-        if (closeBtn != null)
-        {
-            closeBtn.Click += (sender, e) =>
-            {
-                windowManager.RemoveView(floatView);
-            };
-            windowManager = GetSystemService(WindowService).JavaCast<IWindowManager>();
-            windowManager.AddView(floatView, layoutParams);
-            floatView.SetOnTouchListener(this);
-        }
+        //var linearLayout = new LinearLayout(this);
+        //linearLayout.Orientation = Orientation.Vertical;
+        //layoutParams = new WindowManagerLayoutParams();
+        //layoutParams.Type = WindowManagerTypes.AccessibilityOverlay;
+        //layoutParams.Format = Format.Translucent;
+        //layoutParams.Width = ViewGroup.LayoutParams.WrapContent;
+        //layoutParams.Height = ViewGroup.LayoutParams.WrapContent;
+        //layoutParams.Gravity = GravityFlags.Top;
+        //LayoutInflater inflater = LayoutInflater.From(this);
+        //floatView = inflater.Inflate(Resource.Layout.floatview, linearLayout);
+        //var closeBtn = floatView.FindViewById<Android.Widget.ImageButton>(Resource.Id.close_button);
+        //if (closeBtn != null)
+        //{
+        //    closeBtn.Click += (sender, e) =>
+        //    {
+        //        windowManager.RemoveView(floatView);
+        //    };
+        //    windowManager = GetSystemService(WindowService).JavaCast<IWindowManager>();
+        //    windowManager.AddView(floatView, layoutParams);
+        //    floatView.SetOnTouchListener(this);
+        //    rowContainer = floatView.FindViewById<LinearLayout>(Resource.Id.rowContainer);
+        //}
     }
 
     public override bool OnUnbind(Intent intent)
     {
         // Remove the overlay when the service is unbound
-        if (floatView != null)
-        {
-            IWindowManager windowManager = (IWindowManager)GetSystemService(Context.WindowService);
-            windowManager.RemoveView(floatView);
-        }
+        //if (floatView != null)
+        //{
+        //    IWindowManager windowManager = (IWindowManager)GetSystemService(Context.WindowService);
+        //    windowManager.RemoveView(floatView);
+        //}
         return base.OnUnbind(intent);
     }
     private float xDown, yDown;
+    private LinearLayout rowContainer;
+    private string previousOg = "";
+    private string previousExpansion = "";
+
     public bool OnTouch(Android.Views.View v, MotionEvent e)
     {
         var action = e.Action;
