@@ -123,7 +123,7 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
                     }
                     else if(formExpansion != "")
                     {
-                        expansionStr = text.Replace(formKey, formExpansion);
+                        expansionStr = og.Replace(formKey, formExpansion);
                         storeOg = false;
                         send = true;
                         formExpansion = "";
