@@ -4,7 +4,6 @@
     android:orientation="vertical"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:id="@+id/rowContainer"
     android:background="@color/m3_ref_palette_white"
     android:paddingLeft="4dp"
     android:paddingBottom="3dp"
@@ -31,5 +30,11 @@
             android:src="@drawable/ic_m3_chip_close"
             android:contentDescription="@string/mtrl_chip_close_icon_content_description"
             />
+    </LinearLayout>
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/rowContainer">
     </LinearLayout>
 </LinearLayout>
