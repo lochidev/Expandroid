@@ -39,5 +39,3 @@ BTC - bc1q0tv7u3yngq3xpmwlu4gzv8rnez27pv3xcsk6t8
 
 LTC - ltc1qjphn23kql69c0ul6qu88sdsf09qxceswt78yey
 
-XMR - 88PhoNf11nETGxcQeJYXLvH1MKrUc9cGPP6Ft59E4MLSTkWekEeKmH7BfSqaHV7Lv55ZV1ykn5RVm2czxSFCCPfy8u7CbqW
-
