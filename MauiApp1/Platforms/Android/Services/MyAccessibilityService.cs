@@ -124,7 +124,25 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
                     }
                     else if (dict.TryGetValue(text, out var match))
                     {
+                        string replace = match.Replace;
+                        var triggerIndex = expansionStr.IndexOf(text);
                         // echo, random, clipboard and date only supported
+                        if (match.Word)
+                        {
+                            //check the start
+                            if (triggerIndex == 0)
+                            {
+                                if (!_separators.Contains(expansionStr[triggerIndex + text.Length].ToString()))
+                                {
+                                    return;
+                                }
+                            }
+                            //check the start and end
+                            else if (!_separators.Contains(expansionStr[triggerIndex - 1].ToString()) || !_separators.Contains(expansionStr[triggerIndex + text.Length].ToString()))
+                            {
+                                return;
+                            }
+                        }
                         if (!string.IsNullOrEmpty(match.Form))
                         {
                             string[] formLines = match.Form.Split(_lineSeparators, StringSplitOptions.RemoveEmptyEntries);
@@ -147,7 +165,11 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
                                                 // we need to add a control after checking form_fields
                                                 var endIndex = word.IndexOf(']');
                                                 var placeholderStr = word[2..endIndex];
-                                                FormOption formOption = match.Form_Fields[placeholderStr];
+                                                FormOption formOption = null;
+                                                if(match.Form_Fields is not null && match.Form_Fields.ContainsKey(placeholderStr))
+                                                {
+                                                   formOption = match.Form_Fields[placeholderStr];
+                                                }
                                                 if (formOption?.Type == "choice")
                                                 {
                                                     var spinner = new Spinner(BaseContext);
@@ -188,8 +210,6 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
                                                                 replaceDict[placeholderStr] = text;
                                                             }
                                                         };
-                                                        if (match.Form_Fields is not null)
-                                                            et.SetMinLines(match.Form_Fields[placeholderStr].Multiline ? 5 : 1);
                                                         row.AddView(et);
                                                     });
                                                 }
@@ -236,24 +256,6 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
                         }
                         else
                         {
-                            string replace = match.Replace;
-                            var triggerIndex = expansionStr.IndexOf(text);
-                            if (match.Word)
-                            {
-                                //check the start
-                                if (triggerIndex == 0)
-                                {
-                                    if (!_separators.Contains(expansionStr[triggerIndex + text.Length].ToString()))
-                                    {
-                                        return;
-                                    }
-                                }
-                                //check the start and end
-                                else if (!_separators.Contains(expansionStr[triggerIndex - 1].ToString()) || !_separators.Contains(expansionStr[triggerIndex + text.Length].ToString()))
-                                {
-                                    return;
-                                }
-                            }
                             if (globals is not null)
                             {
                                 foreach (var item in globals)
