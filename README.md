@@ -28,6 +28,9 @@ You can further customize date time formats by referring to the C# DateTime.ToSt
 
 Clipboard extension will not work on android 10 or higher due to security measures introduced by google. (Note: I have not tested this app on android versions below 12)
 
+Starting with v7.0.0 forms support has been added.
+Multi-line, choice & list have been added.
+Note that everything under "Using Forms with Script and Shell extensions" is not supported in the document: https://espanso.org/docs/matches/forms/
 # Build
 
 CLI build instructions -> https://learn.microsoft.com/en-us/dotnet/maui/android/deployment/publish-cli
