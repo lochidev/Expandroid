@@ -113,16 +113,16 @@
                         <MudStack Justify="@Justify.SpaceBetween" Row="true">
                             <MudItem>
                                 <MudText Color="Color.Primary" Typo="Typo.h6" Align="Align.Start">@item.Key</MudText>
-                                </MudItem>
-                                <MudItem>
-                                    <MudStack Row="true">
-                                        <MudButton @onclick="() => EditItem(item)" Color="Color.Primary" Variant="Variant.Text">Edit</MudButton>
-                                        <MudButton @onclick="async () => await RemoveItemAsync(item.Value)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
-                                    </MudStack>
-                                </MudItem>
-                            </MudStack>
-                            <MudText class="mr-1" Color="Color.Success" Typo="Typo.h6" Align="Align.Start">@item.Value.Replace</MudText>
-                        </MudPaper>
+                            </MudItem>
+                            <MudItem>
+                                <MudStack Row="true">
+                                    <MudButton @onclick="() => EditItem(item)" Color="Color.Primary" Variant="Variant.Text">Edit</MudButton>
+                                    <MudButton @onclick="async () => await RemoveItemAsync(item.Value)" Color="Color.Error" Variant="Variant.Text">Delete</MudButton>
+                                </MudStack>
+                            </MudItem>
+                        </MudStack>
+                        <MudText class="mr-1" Color="Color.Success" Typo="Typo.h6" Align="Align.Start">@item.Value.Replace</MudText>
+                    </MudPaper>
                 }
                 @if (dict.Count > lazyLoadIndex)
                 {
@@ -201,21 +201,21 @@
                 <MudCardContent>
                     <MudText Typo="Typo.h5">Results</MudText>
                     <MudText Typo="Typo.h6">Process count: @processCount</MudText>
-                        <MudDivider class="mb-2 mt-2" />
-                        <div class="d-flex flex-wrap">
+                    <MudDivider class="mb-2 mt-2" />
+                    <div class="d-flex flex-wrap">
 
-                            <MudCheckBox Label="Is text equal" ReadOnly="true" Checked="@compareResult" Color="Color.Success"></MudCheckBox>
-                            <MudCheckBox Label="Contains the word specified" ReadOnly="true" Checked="@containsResult" Color="Color.Primary"></MudCheckBox>
-                            <MudCheckBox Label="Is length equal" ReadOnly="true" Checked="@lengthCompareResult" Color="Color.Warning"></MudCheckBox>
-                            <MudCheckBox Label="Can text expand" ReadOnly="true" Checked="@canTextExpand" Color="Color.Warning"></MudCheckBox>
-                        </div>
-                    </MudCardContent>
-                </MudCard>
-            </MudTabs>
-        </MudTabPanel>
-    </MudTabs>
+                        <MudCheckBox Label="Is text equal" ReadOnly="true" Checked="@compareResult" Color="Color.Success"></MudCheckBox>
+                        <MudCheckBox Label="Contains the word specified" ReadOnly="true" Checked="@containsResult" Color="Color.Primary"></MudCheckBox>
+                        <MudCheckBox Label="Is length equal" ReadOnly="true" Checked="@lengthCompareResult" Color="Color.Warning"></MudCheckBox>
+                        <MudCheckBox Label="Can text expand" ReadOnly="true" Checked="@canTextExpand" Color="Color.Warning"></MudCheckBox>
+                    </div>
+                </MudCardContent>
+            </MudCard>
+        </MudTabs>
+    </MudTabPanel>
+</MudTabs>
 
-    @code {
+@code {
     List<string> textList = new();
     bool compare = true;
     bool ignoreCase = false;
@@ -562,7 +562,10 @@
         {
             foreach (var item in dict)
             {
-                item.Value.Replace = item.Value.Replace.Replace("\\n", Environment.NewLine);
+                if (item.Value.Replace is not null)
+                {
+                    item.Value.Replace = item.Value.Replace.Replace("\\n", Environment.NewLine);
+                }
             }
             var str = JsonSerializer.Serialize(dict);
             await File.WriteAllTextAsync(AppSettings.DictPath, str);
@@ -727,5 +730,5 @@
             lazyLoadIndex += diff;
         }
     }
-    }
+}
 
