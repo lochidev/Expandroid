@@ -2,7 +2,9 @@
 using Android.AccessibilityServices;
 using Android.App;
 using Android.Content;
+using Android.Graphics;
 using Android.OS;
+using Android.Runtime;
 using Android.Views;
 using Android.Views.Accessibility;
 using Android.Widget;
@@ -89,9 +91,6 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
     {
         try
         {
-            //EditText editText3 = new EditText(this);
-            //editText3.Hint = "Text 3";
-            //editText3.Id = GenerateViewId(); // Assign a unique ID
             if (e.Source == null)
                 return;
             if (e.Source.ClassName.Equals("android.widget.EditText"))
@@ -101,13 +100,10 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
                 {
                     string expansionStr = Text[0].ToString();
                     string og = expansionStr;
-                    //quick brown fox
                     CheckAndUpdateCursorArgs(expansionStr, sendIfCursorFound: true, e);
                     var arr = expansionStr.Split(_separators, StringSplitOptions.RemoveEmptyEntries);
                     bool send = false;
                     bool storeOg = true;
-                    //for (int wNum = 0; wNum < arr.Length; wNum++)
-                    //{
                     var text = arr[^1];
                     if (previousOg == og)
                     {
@@ -148,27 +144,55 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
                                         {
                                             if (word.StartsWith("[["))
                                             {
+                                                // we need to add a control after checking form_fields
                                                 var endIndex = word.IndexOf(']');
                                                 var placeholderStr = word[2..endIndex];
-                                                row.Post(() =>
+                                                FormOption formOption = match.Form_Fields[placeholderStr];
+                                                if (formOption?.Type == "choice")
                                                 {
-                                                    var et = new EditText(BaseContext)
+                                                    var spinner = new Spinner(BaseContext);
+                                                    var adapter = new ArrayAdapter<string>(BaseContext, Android.Resource.Layout.SimpleSpinnerDropDownItem, formOption.Values);
+                                                    spinner.Adapter = adapter;
+                                                    spinner.ItemSelected += (sender, e) =>
                                                     {
-                                                        Hint = placeholderStr
+                                                        replaceDict[placeholderStr] = formOption.Values[e.Position];
                                                     };
-
-                                                    et.TextChanged += (sender, e) =>
+                                                    row.Post(() => row.AddView(spinner));
+                                                }
+                                                else if (formOption?.Type == "list")
+                                                {
+                                                    var listView = new Android.Widget.ListView(BaseContext);
+                                                    var adapter = new ArrayAdapter<string>(BaseContext, Android.Resource.Layout.SimpleListItem1, formOption.Values);
+                                                    listView.Adapter = adapter;
+                                                    listView.ItemClick += (sender, e) =>
                                                     {
-                                                        var text = e.Text.ToString();
-                                                        if (!replaceDict.TryAdd(placeholderStr, text))
+                                                        replaceDict[placeholderStr] = formOption.Values[e.Position];
+                                                    };
+                                                    row.Post(() => row.AddView(listView));
+                                                }
+                                                else
+                                                {
+                                                    //add edittext widget
+                                                    row.Post(() =>
+                                                    {
+                                                        var et = new EditText(BaseContext)
                                                         {
-                                                            replaceDict[placeholderStr] = text;
-                                                        }
-                                                    };
-                                                    if (match.Form_Fields is not null)
-                                                        et.SetMinLines(match.Form_Fields[placeholderStr].Multiline ? 5 : 1);
-                                                    row.AddView(et);
-                                                });
+                                                            Hint = placeholderStr
+                                                        };
+
+                                                        et.TextChanged += (sender, e) =>
+                                                        {
+                                                            var text = e.Text.ToString();
+                                                            if (!replaceDict.TryAdd(placeholderStr, text))
+                                                            {
+                                                                replaceDict[placeholderStr] = text;
+                                                            }
+                                                        };
+                                                        if (match.Form_Fields is not null)
+                                                            et.SetMinLines(match.Form_Fields[placeholderStr].Multiline ? 5 : 1);
+                                                        row.AddView(et);
+                                                    });
+                                                }
                                             }
                                             else
                                             {
@@ -252,7 +276,6 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
                             }
                         }
                     }
-                    //}
                     if (send)
                     {
                         //og has been modified with our new expansion
@@ -382,8 +405,8 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
         layoutParams.Height = ViewGroup.LayoutParams.WrapContent;
         layoutParams.Gravity = GravityFlags.Top;
         LayoutInflater inflater = LayoutInflater.From(this);
-        floatView = inflater.Inflate(Resource.Layout.floatview, linearLayout);
-        var closeBtn = floatView.FindViewById<Android.Widget.ImageButton>(Resource.Id.close_button);
+        floatView = inflater.Inflate(Microsoft.Maui.Resource.Layout.floatview, linearLayout);
+        var closeBtn = floatView.FindViewById<Android.Widget.ImageButton>(Microsoft.Maui.Resource.Id.close_button);
         if (closeBtn != null)
         {
             closeBtn.Click += (sender, e) =>
@@ -394,7 +417,7 @@ public class MyAccessibilityService : AccessibilityService, Android.Views.View.I
             windowManager = GetSystemService(WindowService).JavaCast<IWindowManager>();
             windowManager.AddView(floatView, layoutParams);
             floatView.SetOnTouchListener(this);
-            rowContainer = floatView.FindViewById<LinearLayout>(Resource.Id.rowContainer);
+            rowContainer = floatView.FindViewById<LinearLayout>(Microsoft.Maui.Resource.Id.rowContainer);
         }
     }
 
