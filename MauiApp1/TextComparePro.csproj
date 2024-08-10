@@ -44,12 +44,12 @@
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-android34.0|AnyCPU'">
 		<AndroidPackageFormat>apk</AndroidPackageFormat>
-		<AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
+		<AndroidCreatePackagePerAbi>True</AndroidCreatePackagePerAbi>
 		<AndroidUseAapt2>True</AndroidUseAapt2>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-android34.0|AnyCPU'">
-		<AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
+		<AndroidCreatePackagePerAbi>True</AndroidCreatePackagePerAbi>
 		<AndroidUseAapt2>True</AndroidUseAapt2>
 		<AndroidPackageFormat>apk</AndroidPackageFormat>
 	</PropertyGroup>
