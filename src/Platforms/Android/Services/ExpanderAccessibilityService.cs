@@ -427,8 +427,6 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                 rowContainer.RemoveAllViewsInLayout();
                 skipNextFormEvent = true;
             };
-            windowManager = GetSystemService(WindowService).JavaCast<IWindowManager>();
-            windowManager.AddView(floatView, layoutParams);
             floatView.SetOnTouchListener(this);
             rowContainer = floatView.FindViewById<LinearLayout>(Microsoft.Maui.Resource.Id.rowContainer);
         }

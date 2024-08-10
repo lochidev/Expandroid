@@ -464,7 +464,21 @@
                 };
             foreach (var item in dict)
             {
-                item.Value.Replace = item.Value.Replace.Replace("\\n", Environment.NewLine);
+                if (item.Value.Replace is not null)
+                {
+                    item.Value.Replace = item.Value.Replace.Replace("\\n", Environment.NewLine);
+                    if (item.Value.Vars is not null)
+                    {
+                        foreach (var x in item.Value.Vars)
+                        {
+                            if (x.Type == "date")
+                            {
+                                x.Params.Format = GetOriginalFormat(x.Params.Format);
+                            }
+                        }
+                    }
+
+                }
                 dictWrapper.Matches.Add(item.Value);
             }
             if (await dialogService.DisplayConfirmAsync("Choose format!", "Select yml if this is an espanso config", "Json", "Yml"))
@@ -492,8 +506,8 @@
                 acService.RequestPermission();
             }
             using MemoryStream strm = new(Encoding.UTF8.GetBytes(text));
-            var x = await fileSaver.SaveAsync(name, strm, CancellationToken.None);
-            x.EnsureSuccess();
+            var fs = await fileSaver.SaveAsync(name, strm, CancellationToken.None);
+            fs.EnsureSuccess();
             await dialogService.DisplayConfirmAsync("Export successful!", "Successfully exported all keywords!");
         }
         catch (Exception e)
@@ -708,6 +722,29 @@
         format = format.Replace("%r", "hh:mm:ss tt");
         return format;
     }
+    private static string GetOriginalFormat(string format)
+    {
+        format = format.Replace("yyyy", "%Y");
+        format = format.Replace("MM", "%m");
+        format = format.Replace("MMM", "%b");
+        format = format.Replace("MMMM", "%B");
+        format = format.Replace("dd", "%d");
+        format = format.Replace("d", "%e");
+        format = format.Replace("ddd", "%a");
+        format = format.Replace("dddd", "%A");
+        format = format.Replace("MM/dd/yyyy", "%D");
+        format = format.Replace("yyyy/MM/dd", "%F");
+        format = format.Replace("HH", "%H");
+        format = format.Replace("hh", "%I");
+        format = format.Replace("tt", "%p");
+        format = format.Replace("mm", "%M");
+        format = format.Replace("ss", "%S");
+        format = format.Replace("HH:mm", "%R");
+        format = format.Replace("HH:mm:ss", "%T");
+        format = format.Replace("hh:mm:ss tt", "%r");
+        return format;
+    }
+
     private void EditItem(KeyValuePair<string, Match> item)
     {
         currentMatch.Trigger = item.Value.Trigger;
