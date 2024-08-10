@@ -50,3 +50,29 @@ matches:
     type: date
     params:
       format: mm/HH
+- trigger: :bform
+  form: |
+      Hey [[name]],
+      [[text]]
+      Happy Birthday!
+  form_fields:
+      text:
+        multiline: true
+- trigger: :choice
+  form: |
+      [[choices]]
+  form_fields:
+      choices:
+        type: choice
+        values:
+          - First choice
+          - Second choice
+- trigger: ":list"
+  form: |
+      [[choices]]
+  form_fields:
+      choices:
+        type: list
+        values:
+          - First choice
+          - Second choice
