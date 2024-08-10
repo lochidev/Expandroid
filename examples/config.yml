@@ -49,7 +49,7 @@ matches:
   - name: time
     type: date
     params:
-      format: mm/HH
+      format: HH:mm
 - trigger: :bform
   form: |
       Hey [[name]],
