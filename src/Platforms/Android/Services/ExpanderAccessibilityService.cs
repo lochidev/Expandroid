@@ -35,7 +35,8 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
     private string previousExpansion = "";
     private string formExpansion = "";
     private string formKey = "";
-
+    private bool skipNextFormEvent = false;
+    private int skipCount = 0;
 
     public override void OnCreate()
     {
@@ -99,7 +100,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                 if (Text != null)
                 {
                     string expansionStr = Text[0].ToString();
-                    string og = expansionStr;
+                    string og = expansionStr; //not modified
                     CheckAndUpdateCursorArgs(expansionStr, sendIfCursorFound: true, e);
                     var arr = expansionStr.Split(_separators, StringSplitOptions.RemoveEmptyEntries);
                     bool send = false;
@@ -109,10 +110,10 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                     {
                         return;
                     }
-                    else if(formExpansion != "")
+                    else if (formExpansion != "")
                     {
                         expansionStr = og.Replace(formKey, formExpansion);
-                        storeOg = false;
+                        storeOg = true;
                         send = true;
                         formExpansion = "";
                     }
@@ -121,6 +122,16 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                         expansionStr = previousOg;
                         storeOg = false;
                         send = true;
+                    }
+                    else if (skipNextFormEvent)
+                    {
+                        if (skipCount > 1)
+                        {
+                            skipNextFormEvent = false;
+                            skipCount = 0;
+                        }
+                        skipCount++;
+                        return;
                     }
                     else if (dict.TryGetValue(text, out var match))
                     {
@@ -166,9 +177,9 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                                                 var endIndex = word.IndexOf(']');
                                                 var placeholderStr = word[2..endIndex];
                                                 FormOption formOption = null;
-                                                if(match.Form_Fields is not null && match.Form_Fields.ContainsKey(placeholderStr))
+                                                if (match.Form_Fields is not null && match.Form_Fields.ContainsKey(placeholderStr))
                                                 {
-                                                   formOption = match.Form_Fields[placeholderStr];
+                                                    formOption = match.Form_Fields[placeholderStr];
                                                 }
                                                 if (formOption?.Type == "choice")
                                                 {
@@ -280,7 +291,6 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                     }
                     if (send)
                     {
-                        //og has been modified with our new expansion
                         DoExpansion(e, expansionStr);
                         if (storeOg)
                         {
@@ -415,6 +425,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
             {
                 windowManager.RemoveView(floatView);
                 rowContainer.RemoveAllViewsInLayout();
+                skipNextFormEvent = true;
             };
             windowManager = GetSystemService(WindowService).JavaCast<IWindowManager>();
             windowManager.AddView(floatView, layoutParams);
