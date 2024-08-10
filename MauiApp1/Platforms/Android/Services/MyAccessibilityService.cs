@@ -2,25 +2,17 @@
 using Android.AccessibilityServices;
 using Android.App;
 using Android.Content;
-using Android.Graphics;
 using Android.OS;
-using Android.Runtime;
 using Android.Views;
 using Android.Views.Accessibility;
 using Android.Widget;
 using CommunityToolkit.Mvvm.Messaging;
 using MauiApp1.Models;
-using Microsoft.Maui.Controls;
-using Microsoft.Maui.Layouts;
 using System.Security.Cryptography;
-using System.Text;
 using System.Text.Json;
-using static Android.Views.View;
-using static MudBlazor.Colors;
-using Resource = Microsoft.Maui.Resource;
 
 [Service(Exported = false, Label = "TextToolsPro", Permission = Manifest.Permission.BindAccessibilityService)]
-[IntentFilter(new[] { "android.accessibilityservice.AccessibilityService" })]
+[IntentFilter(["android.accessibilityservice.AccessibilityService"])]
 [MetaData("android.accessibilityservice", Resource = "@xml/accessibility_service")]
 public class MyAccessibilityService : AccessibilityService, Android.Views.View.IOnTouchListener
 {
