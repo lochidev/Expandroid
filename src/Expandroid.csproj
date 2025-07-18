@@ -3,8 +3,10 @@
 		<TargetFrameworks>net9.0-android36.0</TargetFrameworks>
 		<!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
 		<!-- <TargetFrameworks>$(TargetFrameworks);net9.0-tizen</TargetFrameworks> -->
-		<!--<RuntimeIdentifiers>android-arm;android-arm64;android-x86;android-x64</RuntimeIdentifiers>-->
-		<!--<RuntimeIdentifiers>android-arm</RuntimeIdentifiers>-->
+		<!--Use for GP-->
+		<RuntimeIdentifiers>android-arm;android-arm64;android-x86;android-x64</RuntimeIdentifiers>
+		<!--Use for arm-->
+		<!--<RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>-->
 
 		<OutputType>Exe</OutputType>
 		<RootNamespace>Expandroid</RootNamespace>
@@ -18,8 +20,8 @@
 		<ApplicationId>com.dingleinc.texttoolspro</ApplicationId>
 		<ApplicationIdGuid>A9E98E65-AE83-5428-9AB1-578DC0552CB8</ApplicationIdGuid>
 		<!-- Versions -->
-		<ApplicationDisplayVersion>7.1.2</ApplicationDisplayVersion>
-		<ApplicationVersion>200026</ApplicationVersion>
+		<ApplicationDisplayVersion>7.2.1</ApplicationDisplayVersion>
+		<ApplicationVersion>200030</ApplicationVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
 		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
@@ -97,6 +99,16 @@
 		<AndroidCreatePackagePerAbi>True</AndroidCreatePackagePerAbi>
 		<AndroidUseAapt2>True</AndroidUseAapt2>
 		<AndroidPackageFormat>apk</AndroidPackageFormat>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-android36.0|AnyCPU'">
+	  <AndroidUseAapt2>True</AndroidUseAapt2>
+	  <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
+	  <AndroidPackageFormat>aab</AndroidPackageFormat>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android36.0|AnyCPU'">
+	  <AndroidPackageFormat>aab</AndroidPackageFormat>
+	  <AndroidCreatePackagePerAbi>False</AndroidCreatePackagePerAbi>
+	  <AndroidUseAapt2>True</AndroidUseAapt2>
 	</PropertyGroup>
 	<ItemGroup>
 		<!-- App Icon -->
