@@ -95,6 +95,10 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
 
     private readonly ConcurrentDictionary<string, CancellationTokenSource> _packageWatchers = new();
     private readonly ConcurrentDictionary<string, string> _lastKnownText = new();
+    private readonly ConcurrentDictionary<string, DateTime> _lastEventTimes = new();
+
+    // Threshold before the watcher takes over (in milliseconds)
+    private const double SilentThresholdMs = 1500;
 
     public override async void OnAccessibilityEvent(AccessibilityEvent e)
     {
@@ -108,12 +112,14 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
             if (string.IsNullOrEmpty(packageName))
                 return;
 
+            // 1. Mark that we received an event from this package so the watcher backs off
+            _lastEventTimes[packageName] = DateTime.UtcNow;
+
             var node = e.Source;
 
             // --------------------------------------------------
             // NORMAL FAST PATH
             // --------------------------------------------------
-
             if (node != null)
             {
                 string className = node.ClassName?.ToString();
@@ -123,33 +129,23 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                     className.Contains("EditText") &&
                     node.Editable;
 
-                if (isEditText &&
-                    e.Text != null &&
-                    e.Text.Count > 0)
+                if (isEditText)
                 {
                     string expansionStr = node.Text?.ToString();
 
                     if (!string.IsNullOrWhiteSpace(expansionStr))
                     {
-                        bool changed =
-                            !_lastKnownText.TryGetValue(packageName, out var last) ||
-                            last != expansionStr;
-
-                        if (changed)
-                        {
-                            _lastKnownText[packageName] = expansionStr;
-                            await HandleTextExpansionAsync(e, expansionStr);
-                        }
+                        await HandleTextExpansionAsync(e, expansionStr);
                     }
 
+                    // If we handled it natively, we just return. Watcher is still alive but sleeping.
                     return;
                 }
             }
 
             // --------------------------------------------------
-            // FALLBACK
+            // FALLBACK WATCHER BOOTSTRAP
             // --------------------------------------------------
-
             StartPackageWatcher(packageName, e);
         }
         catch (Exception ex)
@@ -158,12 +154,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
         }
     }
 
-   
-    private readonly ConcurrentDictionary<string, DateTime> _lastFocusTime = new();
-
-    private void StartPackageWatcher(
-        string packageName,
-        AccessibilityEvent triggerEvent)
+    private void StartPackageWatcher(string packageName, AccessibilityEvent triggerEvent)
     {
         if (_packageWatchers.ContainsKey(packageName))
             return;
@@ -174,6 +165,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
             return;
 
         var token = cts.Token;
+        const int watcherDelayMs = 1000;
 
         Task.Run(async () =>
         {
@@ -185,56 +177,65 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
 
                     if (root == null)
                     {
-                        await Task.Delay(1000, token);
+                        await Task.Delay(watcherDelayMs, token);
                         continue;
                     }
 
+                    // --------------------------------------------
+                    // CHECK IF THIS APP IS STILL FOREGROUND
+                    // --------------------------------------------
+                    string currentPackage = root.PackageName?.ToString();
+
+                    if (currentPackage != packageName)
+                    {
+                        Android.Util.Log.Debug("A11Y", $"[{packageName}] watcher stopped. App exited.");
+                        break;
+                    }
+
+                    // --------------------------------------------
+                    // TIMEOUT LOGIC & FIND CURRENTLY FOCUSED EDITTEXT
+                    // --------------------------------------------
                     var focused = FindFocusedEditText(root);
 
-                    // --------------------------------------------------
-                    // 1. FOCUS ACTIVE → KEEP ALIVE + PROCESS TEXT
-                    // --------------------------------------------------
                     if (focused != null)
                     {
-                        _lastFocusTime[packageName] = DateTime.UtcNow;
+                        string text = focused.Text?.ToString() ?? "";
 
-                        string text = focused.Text?.ToString();
+                        // Calculate time since the last native AccessibilityEvent
+                        var lastEventTime = _lastEventTimes.TryGetValue(packageName, out var time) ? time : DateTime.MinValue;
+                        bool isSilent = (DateTime.UtcNow - lastEventTime).TotalMilliseconds > SilentThresholdMs;
 
-                        if (!string.IsNullOrWhiteSpace(text))
+                        if (isSilent)
                         {
-                            bool changed =
-                                !_lastKnownText.TryGetValue(packageName, out var last) ||
-                                last != text;
-
-                            if (changed)
+                            // FALLBACK TRIGGERED: App stopped sending native events
+                            if (!string.IsNullOrWhiteSpace(text))
                             {
-                                _lastKnownText[packageName] = text;
+                                bool changed = !_lastKnownText.TryGetValue(packageName, out var last) || last != text;
 
-                                await HandleTextExpansionAsync(triggerEvent, text);
+                                if (changed)
+                                {
+                                    _lastKnownText[packageName] = text;
+                                    await HandleTextExpansionAsync(triggerEvent, text);
+                                }
+                            }
+                            else
+                            {
+                                _lastKnownText[packageName] = "";
                             }
                         }
-
-                        await Task.Delay(1000, token);
-                        continue;
-                    }
-
-                    // --------------------------------------------------
-                    // 2. NO FOCUS → CHECK INACTIVITY TIMEOUT
-                    // --------------------------------------------------
-                    if (_lastFocusTime.TryGetValue(packageName, out var lastFocus))
-                    {
-                        if ((DateTime.UtcNow - lastFocus).TotalMinutes >= 1)
+                        else
                         {
-                            Android.Util.Log.Debug(
-                                "A11Y",
-                                $"[{packageName}] watcher stopped (no focus for 1 min)");
-
-                            break;
+                            // NATIVE IS WORKING: Just sync state so we don't accidentally fire
+                            // old text if the app suddenly goes silent.
+                            _lastKnownText[packageName] = text;
                         }
                     }
 
-                    await Task.Delay(1000, token);
+                    await Task.Delay(watcherDelayMs, token);
                 }
+            }
+            catch (Android.OS.OperationCanceledException)
+            {
             }
             catch (Exception ex)
             {
@@ -243,15 +244,15 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
             finally
             {
                 _packageWatchers.TryRemove(packageName, out _);
-                _lastFocusTime.TryRemove(packageName, out _);
+                _lastKnownText.TryRemove(packageName, out _);
+                _lastEventTimes.TryRemove(packageName, out _); // Cleanup memory
             }
         }, token);
     }
 
     private AccessibilityNodeInfo FindFocusedEditText(AccessibilityNodeInfo node)
     {
-        if (node == null)
-            return null;
+        if (node == null) return null;
 
         try
         {
@@ -262,9 +263,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                 className.Contains("EditText") &&
                 node.Editable;
 
-            bool isFocused =
-                node.Focused ||
-                node.AccessibilityFocused;
+            bool isFocused = node.Focused || node.AccessibilityFocused;
 
             if (isEditText && isFocused)
                 return node;
@@ -283,7 +282,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
 
         return null;
     }
-         
+
 
     public async Task HandleTextExpansionAsync(AccessibilityEvent e, string expansionStr)
     {
