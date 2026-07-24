@@ -15,8 +15,8 @@
     <ApplicationId>com.dingleinc.texttoolspro</ApplicationId>
     <ApplicationIdGuid>A9E98E65-AE83-5428-9AB1-578DC0552CB8</ApplicationIdGuid>
     <!-- Versions -->
-    <ApplicationDisplayVersion>7.0.0</ApplicationDisplayVersion>
-    <ApplicationVersion>23</ApplicationVersion>
+    <ApplicationDisplayVersion>7.2.0</ApplicationDisplayVersion>
+    <ApplicationVersion>200027</ApplicationVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">24.0</SupportedOSPlatformVersion>
@@ -65,7 +65,7 @@
     <PackageReference Include="MudBlazor" Version="9.7.0" />
     <PackageReference Include="YamlDotNet" Version="18.1.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="CommunityToolkit.Maui" Version="14.2.2" />
+    <PackageReference Include="CommunityToolkit.Maui" Version="15.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="10.0.90" />
     <PackageReference Include="Microsoft.Maui.Controls" Version="10.0.90" />
   </ItemGroup>
