@@ -5,18 +5,14 @@ using Android.Content;
 using Android.Graphics;
 using Android.OS;
 using Android.Runtime;
-using Android.Util;
 using Android.Views;
 using Android.Views.Accessibility;
 using Android.Widget;
 using CommunityToolkit.Mvvm.Messaging;
 using Expandroid.Models;
-using Microsoft.Maui.ApplicationModel.DataTransfer;
 using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text.Json;
-using Android.Views.Accessibility;
-using System.Collections.Concurrent;
 
 [Service(Exported = false, Label = "Expandroid", Permission = Manifest.Permission.BindAccessibilityService)]
 [IntentFilter(["android.accessibilityservice.AccessibilityService"])]
@@ -46,11 +42,11 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
     public override void OnCreate()
     {
         base.OnCreate();
-        dict = new();
+        dict = [];
         WeakReferenceMessenger.Default.Register<AcServiceMessage>(this, (r, m) =>
         {
-            var cmd = m.Value.Item1;
-            var item = m.Value.Item2;
+            string cmd = m.Value.Item1;
+            Match item = m.Value.Item2;
             if (cmd == "Add")
             {
                 if (!string.IsNullOrEmpty(item.Form) || !(string.IsNullOrEmpty(item.Trigger) || string.IsNullOrEmpty(item.Replace)))
@@ -66,7 +62,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
             }
             else if (cmd is not "_")
             {
-                dict.Remove(item.Trigger, out var _);
+                _ = dict.Remove(item.Trigger, out _);
             }
         });
         WeakReferenceMessenger.Default.Register<AcGlobalsMessage>(this, (r, m) =>
@@ -77,14 +73,17 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
         {
             if (File.Exists(AppSettings.DictPath))
             {
-                using var stream = File.OpenRead(AppSettings.DictPath);
+                using FileStream stream = File.OpenRead(AppSettings.DictPath);
                 dict = JsonSerializer.Deserialize<Dictionary<string, Match>>(stream);
             }
             else
-                dict = new();
+            {
+                dict = [];
+            }
+
             if (File.Exists(AppSettings.GlobalVarsPath))
             {
-                using var stream = File.OpenRead(AppSettings.GlobalVarsPath);
+                using FileStream stream = File.OpenRead(AppSettings.GlobalVarsPath);
                 globals = JsonSerializer.Deserialize<List<Var>>(stream);
             }
         }
@@ -105,17 +104,21 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
         try
         {
             if (e == null)
+            {
                 return;
+            }
 
             string packageName = e.PackageName?.ToString();
 
             if (string.IsNullOrEmpty(packageName))
+            {
                 return;
+            }
 
             // 1. Mark that we received an event from this package so the watcher backs off
             _lastEventTimes[packageName] = DateTime.UtcNow;
 
-            var node = e.Source;
+            AccessibilityNodeInfo node = e.Source;
 
             // --------------------------------------------------
             // NORMAL FAST PATH
@@ -148,32 +151,36 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
             // --------------------------------------------------
             StartPackageWatcher(packageName, e);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            Android.Util.Log.Error("A11Y", ex.ToString());
+
         }
     }
 
     private void StartPackageWatcher(string packageName, AccessibilityEvent triggerEvent)
     {
         if (_packageWatchers.ContainsKey(packageName))
+        {
             return;
+        }
 
         var cts = new CancellationTokenSource();
 
         if (!_packageWatchers.TryAdd(packageName, cts))
+        {
             return;
+        }
 
-        var token = cts.Token;
+        CancellationToken token = cts.Token;
         const int watcherDelayMs = 1000;
 
-        Task.Run(async () =>
+        _ = Task.Run(async () =>
         {
             try
             {
                 while (!token.IsCancellationRequested)
                 {
-                    var root = RootInActiveWindow;
+                    AccessibilityNodeInfo root = RootInActiveWindow;
 
                     if (root == null)
                     {
@@ -188,21 +195,20 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
 
                     if (currentPackage != packageName)
                     {
-                        Android.Util.Log.Debug("A11Y", $"[{packageName}] watcher stopped. App exited.");
                         break;
                     }
 
                     // --------------------------------------------
                     // TIMEOUT LOGIC & FIND CURRENTLY FOCUSED EDITTEXT
                     // --------------------------------------------
-                    var focused = FindFocusedEditText(root);
+                    AccessibilityNodeInfo focused = FindFocusedEditText(root);
 
                     if (focused != null)
                     {
                         string text = focused.Text?.ToString() ?? "";
 
                         // Calculate time since the last native AccessibilityEvent
-                        var lastEventTime = _lastEventTimes.TryGetValue(packageName, out var time) ? time : DateTime.MinValue;
+                        DateTime lastEventTime = _lastEventTimes.TryGetValue(packageName, out DateTime time) ? time : DateTime.MinValue;
                         bool isSilent = (DateTime.UtcNow - lastEventTime).TotalMilliseconds > SilentThresholdMs;
 
                         if (isSilent)
@@ -210,7 +216,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                             // FALLBACK TRIGGERED: App stopped sending native events
                             if (!string.IsNullOrWhiteSpace(text))
                             {
-                                bool changed = !_lastKnownText.TryGetValue(packageName, out var last) || last != text;
+                                bool changed = !_lastKnownText.TryGetValue(packageName, out string last) || last != text;
 
                                 if (changed)
                                 {
@@ -237,22 +243,25 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
             catch (Android.OS.OperationCanceledException)
             {
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                Android.Util.Log.Error("A11Y", $"Watcher error ({packageName}): {ex}");
+
             }
             finally
             {
-                _packageWatchers.TryRemove(packageName, out _);
-                _lastKnownText.TryRemove(packageName, out _);
-                _lastEventTimes.TryRemove(packageName, out _); // Cleanup memory
+                _ = _packageWatchers.TryRemove(packageName, out _);
+                _ = _lastKnownText.TryRemove(packageName, out _);
+                _ = _lastEventTimes.TryRemove(packageName, out _); // Cleanup memory
             }
         }, token);
     }
 
     private AccessibilityNodeInfo FindFocusedEditText(AccessibilityNodeInfo node)
     {
-        if (node == null) return null;
+        if (node == null)
+        {
+            return null;
+        }
 
         try
         {
@@ -266,13 +275,17 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
             bool isFocused = node.Focused || node.AccessibilityFocused;
 
             if (isEditText && isFocused)
+            {
                 return node;
+            }
 
             for (int i = 0; i < node.ChildCount; i++)
             {
-                var result = FindFocusedEditText(node.GetChild(i));
+                AccessibilityNodeInfo result = FindFocusedEditText(node.GetChild(i));
                 if (result != null)
+                {
                     return result;
+                }
             }
         }
         catch
@@ -289,13 +302,16 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
         try
         {
             if (string.IsNullOrEmpty(expansionStr))
+            {
                 return;
+            }
+
             string original = expansionStr; //not modified
             CheckAndUpdateCursorArgs(expansionStr, sendIfCursorFound: true, e);
-            var arr = expansionStr.Split(_separators, StringSplitOptions.RemoveEmptyEntries);
+            string[] arr = expansionStr.Split(_separators, StringSplitOptions.RemoveEmptyEntries);
             bool send = false;
             bool storeOriginal = true;
-            var text = arr[^1];
+            string text = arr[^1];
             if (previousOriginal == original)
             {
                 return;
@@ -323,10 +339,10 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                 skipCount++;
                 return;
             }
-            else if (dict.TryGetValue(text, out var match))
+            else if (dict.TryGetValue(text, out Match match))
             {
                 string replace = match.Replace;
-                var triggerIndex = expansionStr.IndexOf(text);
+                int triggerIndex = expansionStr.IndexOf(text);
                 // echo, random, clipboard and date only supported
                 if (match.Word)
                 {
@@ -364,8 +380,8 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                                     if (word.StartsWith("[["))
                                     {
                                         // we need to add a control after checking form_fields
-                                        var endIndex = word.IndexOf(']');
-                                        var placeholderStr = word[2..endIndex];
+                                        int endIndex = word.IndexOf(']');
+                                        string placeholderStr = word[2..endIndex];
                                         FormOption formOption = null;
                                         if (match.Form_Fields is not null && match.Form_Fields.ContainsKey(placeholderStr))
                                         {
@@ -380,7 +396,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                                             {
                                                 replaceDict[placeholderStr] = formOption.Values[e.Position];
                                             };
-                                            row.Post(() => row.AddView(spinner));
+                                            _ = row.Post(() => row.AddView(spinner));
                                         }
                                         else if (formOption?.Type == "list")
                                         {
@@ -391,12 +407,12 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                                             {
                                                 replaceDict[placeholderStr] = formOption.Values[e.Position];
                                             };
-                                            row.Post(() => row.AddView(listView));
+                                            _ = row.Post(() => row.AddView(listView));
                                         }
                                         else
                                         {
                                             //add edittext widget
-                                            row.Post(() =>
+                                            _ = row.Post(() =>
                                             {
                                                 var et = new EditText(BaseContext)
                                                 {
@@ -405,7 +421,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
 
                                                 et.TextChanged += (sender, e) =>
                                                 {
-                                                    var text = e.Text.ToString();
+                                                    string text = e.Text.ToString();
                                                     if (!replaceDict.TryAdd(placeholderStr, text))
                                                     {
                                                         replaceDict[placeholderStr] = text;
@@ -426,7 +442,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                         {
                             AddTextView(row, line);
                         }
-                        rowContainer.Post(() =>
+                        _ = rowContainer.Post(() =>
                         {
                             rowContainer.AddView(row);
                         });
@@ -438,8 +454,8 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                     submitButton.Click += (sender, ea) =>
                     {
                         // Replace all occurrences of keys with values
-                        var formText = match.Form;
-                        foreach (var item in replaceDict)
+                        string formText = match.Form;
+                        foreach (KeyValuePair<string, string> item in replaceDict)
                         {
                             string key = $"[[{item.Key}]]";
                             formText = formText.Replace(key, item.Value);
@@ -449,7 +465,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                         formExpansion = formText;
                         formKey = text;
                     };
-                    rowContainer.Post(() =>
+                    _ = rowContainer.Post(() =>
                     {
                         rowContainer.AddView(submitButton);
                     });
@@ -459,21 +475,21 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                 {
                     if (globals is not null)
                     {
-                        foreach (var item in globals)
+                        foreach (Var item in globals)
                         {
                             replace = await ParseItemAsync(item, replace);
                         }
                     }
                     if (match.Vars is not null && match.Vars.Count > 0)
                     {
-                        foreach (var item in match.Vars)
+                        foreach (Var item in match.Vars)
                         {
                             replace = await ParseItemAsync(item, replace);
                         }
                     }
                     if (replace is not null)
                     {
-                        var end = expansionStr[triggerIndex..].Replace(text, replace);
+                        string end = expansionStr[triggerIndex..].Replace(text, replace);
                         expansionStr = expansionStr[..triggerIndex] + end;
                         send = true;
                     }
@@ -497,7 +513,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
 
 
         }
-        catch (Exception ex)
+        catch (Exception)
         {
 
         }
@@ -512,16 +528,20 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
         // --------------------------------------------------
         if (node == null)
         {
-            var root = RootInActiveWindow;
+            AccessibilityNodeInfo root = RootInActiveWindow;
 
             if (root == null)
+            {
                 return;
+            }
 
             node = FindFocusedEditText(root);
         }
 
         if (node == null)
+        {
             return;
+        }
 
         try
         {
@@ -533,7 +553,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                 AccessibilityNodeInfo.ActionArgumentSetTextCharsequence,
                 og);
 
-            node.PerformAction(Android.Views.Accessibility.Action.SetText, TextArgs);
+            _ = node.PerformAction(Android.Views.Accessibility.Action.SetText, TextArgs);
 
             // --------------------------------------------------
             // REFRESH + CURSOR HANDLING
@@ -545,20 +565,20 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                     sendIfCursorFound: false,
                     e);
 
-                node.PerformAction(
+                _ = node.PerformAction(
                     Android.Views.Accessibility.Action.SetSelection,
                     CursorArgs);
             }
         }
         catch (Exception ex)
         {
-            Android.Util.Log.Error("A11Y", $"DoExpansion error: {ex}");
+            _ = Android.Util.Log.Error("A11Y", $"DoExpansion error: {ex}");
         }
     }
 
     private void AddTextView(LinearLayout row, string word)
     {
-        row.Post(() =>
+        _ = row.Post(() =>
         {
             row.AddView(new TextView(BaseContext)
             {
@@ -578,7 +598,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
             CursorArgs.PutInt(AccessibilityNodeInfo.ActionArgumentSelectionEndInt, startIndex + CursorStr.Length);
             if (sendIfCursorFound)
             {
-                e.Source.PerformAction(Android.Views.Accessibility.Action.SetSelection, CursorArgs);
+                _ = e.Source.PerformAction(Android.Views.Accessibility.Action.SetSelection, CursorArgs);
             }
         }
         else
@@ -600,19 +620,19 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                         replace = replace.Replace(WrapName(item.Name), item.Params.Echo);
                         break;
                     case "random":
-                        var choices = item.Params.Choices;
+                        List<string> choices = item.Params.Choices;
                         replace = replace.Replace(WrapName(item.Name), choices[RandomNumberGenerator.GetInt32(0, choices.Count)]);
                         break;
                     case "clipboard":
                         //if (Clipboard.Default.HasText)
                         {
-                            var clip = await Clipboard.Default.GetTextAsync();
+                            string clip = await Clipboard.Default.GetTextAsync();
                             replace = replace.Replace(WrapName(item.Name), clip);
                         }
                         break;
                     case "date":
-                        var param = item.Params;
-                        var date = (DateTime.Now + TimeSpan.FromSeconds(param.Offset)).ToString(param.Format);
+                        Params param = item.Params;
+                        string date = (DateTime.Now + TimeSpan.FromSeconds(param.Offset)).ToString(param.Format);
                         replace = replace.Replace(WrapName(item.Name), date);
                         break;
                     default:
@@ -638,18 +658,22 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
     protected override void OnServiceConnected()
     {
         base.OnServiceConnected();
-        WeakReferenceMessenger.Default.Send(new AcServiceMessage(("_", null)));
-        var linearLayout = new LinearLayout(this);
-        linearLayout.Orientation = Orientation.Vertical;
-        layoutParams = new WindowManagerLayoutParams();
-        layoutParams.Type = WindowManagerTypes.AccessibilityOverlay;
-        layoutParams.Format = Format.Translucent;
-        layoutParams.Width = ViewGroup.LayoutParams.WrapContent;
-        layoutParams.Height = ViewGroup.LayoutParams.WrapContent;
-        layoutParams.Gravity = GravityFlags.Top;
+        _ = WeakReferenceMessenger.Default.Send(new AcServiceMessage(("_", null)));
+        var linearLayout = new LinearLayout(this)
+        {
+            Orientation = Orientation.Vertical
+        };
+        layoutParams = new WindowManagerLayoutParams
+        {
+            Type = WindowManagerTypes.AccessibilityOverlay,
+            Format = Format.Translucent,
+            Width = ViewGroup.LayoutParams.WrapContent,
+            Height = ViewGroup.LayoutParams.WrapContent,
+            Gravity = GravityFlags.Top
+        };
         LayoutInflater inflater = LayoutInflater.From(this);
         floatView = inflater.Inflate(Microsoft.Maui.Resource.Layout.floatview, linearLayout);
-        var closeBtn = floatView.FindViewById<Android.Widget.ImageButton>(Microsoft.Maui.Resource.Id.close_button);
+        Android.Widget.ImageButton closeBtn = floatView.FindViewById<Android.Widget.ImageButton>(Microsoft.Maui.Resource.Id.close_button);
         if (closeBtn != null)
         {
             closeBtn.Click += (sender, e) =>
@@ -676,7 +700,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
     }
     public bool OnTouch(Android.Views.View v, MotionEvent e)
     {
-        var action = e.Action;
+        MotionEventActions action = e.Action;
 
         switch (action)
         {

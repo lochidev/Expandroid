@@ -1,7 +1,6 @@
 ﻿using Android.App;
 using Android.Content.PM;
 using System.Diagnostics;
-using Microsoft.Maui;
 
 namespace Expandroid;
 

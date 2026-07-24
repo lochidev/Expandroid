@@ -1,5 +1,6 @@
 ﻿using Android;
 using Android.AccessibilityServices;
+using Android.App;
 using Android.Content;
 using Android.Content.PM;
 using Android.Provider;
@@ -7,7 +8,6 @@ using Android.Views.Accessibility;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using Expandroid.Models;
-using Microsoft.Maui.ApplicationModel;
 
 namespace Expandroid.Services
 {
@@ -15,7 +15,7 @@ namespace Expandroid.Services
     {
         public bool IsActivated()
         {
-            var context = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity.BaseContext;
+            Context context = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity.BaseContext;
             AccessibilityManager am = (AccessibilityManager)context.GetSystemService(Context.AccessibilityService);
             IList<AccessibilityServiceInfo> enabledServices = am.GetEnabledAccessibilityServiceList(FeedbackFlags.Generic);
 
@@ -23,21 +23,23 @@ namespace Expandroid.Services
             {
                 ServiceInfo enabledServiceInfo = enabledService.ResolveInfo.ServiceInfo;
                 if (enabledServiceInfo.PackageName.Equals(context.PackageName))
+                {
                     return true;
+                }
             }
 
             return false;
         }
         public void OpenSettings()
         {
-            var context = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity.BaseContext;
-            Intent intent = new Intent(Settings.ActionAccessibilitySettings);
-            intent.SetFlags(ActivityFlags.NewTask);
+            Context context = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity.BaseContext;
+            Intent intent = new(Settings.ActionAccessibilitySettings);
+            _ = intent.SetFlags(ActivityFlags.NewTask);
             context.StartActivity(intent);
         }
         public bool RequestPermission()
         {
-            var activity = Platform.CurrentActivity ?? throw new NullReferenceException("Current activity is null");
+            Activity activity = Platform.CurrentActivity ?? throw new NullReferenceException("Current activity is null");
 
             if (ContextCompat.CheckSelfPermission(activity, Manifest.Permission.WriteExternalStorage) == Permission.Granted)
             {

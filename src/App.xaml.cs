@@ -6,19 +6,10 @@ public partial class App : Application
     public App()
     {
         InitializeComponent();
-
-        MainPage = new MainPage();
     }
     protected override Window CreateWindow(IActivationState activationState)
     {
-        if (window is null)
-        {
-            window = base.CreateWindow(activationState);
-        }
-        else
-        {
-            MainPage = new MainPage();
-        }
+        window ??= new Window(new MainPage());
         return window;
     }
 }

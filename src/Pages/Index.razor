@@ -14,8 +14,9 @@
 <MudText Typo="Typo.h4" Align="Align.Center" class="mb-3">
     Expandroid
 </MudText>
-<MudTabs @ref="@Tabs" class="mt-3" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
+<MudTabs @bind-ActivePanelIndex="activeTabIndex" @ref="@Tabs" class="mt-3" Elevation="0" Rounded="true" ApplyEffectsToContainer="true">
     <MudTabPanel Text="Text Expander (Accessibility Service)">
+        <div class="mt-2">
         @if (!canTextExpand)
         {
             <MudText class="mb-3">Please provide access to the AccessibilityServices API in order to use this feature. Data collected through the API never leaves your device. Providing access will give our accessibility service the ability to replace the keywords you set up with the expanded text, whenever you type on an EditText widget, both inside and outside our app!</MudText>
@@ -41,7 +42,7 @@
                 <MudButton @onclick="AddItemAsync" Color="Color.Primary" Variant="Variant.Text">Add</MudButton>
             </div>
             <MudPaper class="mt-2">
-                <MudList Clickable="false" T="Var">
+                <MudList T="Var">
                     <MudListSubheader>
                         Variables:
                         <MudChip Color="Color.Secondary">
@@ -135,11 +136,13 @@
 
             }
         }
+        </div>
     </MudTabPanel>
     <MudTabPanel Text="Tools">
+        <div class="mt-2">
         <MudTextField T="string" HelperText="Length" Counter="textList[0].Length" Label="Text 1" Variant="Variant.Text" @bind-Value="@textList[0]" Lines="5" />
         <MudTextField T="string" HelperText="Length" Counter="textList[1].Length" Label="Text 2" Variant="Variant.Text" @bind-Value="@textList[1]" Lines="5" />
-        <MudTabs class="mt-3" Elevation="0" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-2">
+        <MudTabs class="mt-3" Elevation="0" Rounded="true" ApplyEffectsToContainer="true">
             <MudTabPanel Text="Basic">
                 <div class="d-flex flex-wrap">
                     <MudCheckBox Label="Compare" @bind-Value="@compare" Color="Color.Primary"></MudCheckBox>
@@ -212,6 +215,7 @@
                 </MudCardContent>
             </MudCard>
         </MudTabs>
+        </div>
     </MudTabPanel>
 </MudTabs>
 
@@ -234,6 +238,7 @@
     bool toLower = false;
     ulong processCount = 0;
     public MudTabs Tabs;
+    int activeTabIndex = 0;
     bool makeBold = false;
     bool makeItalic = false;
     bool makeStrike = false;
@@ -640,7 +645,7 @@
         processCount++;
         try
         {
-            if (Tabs.ActivePanelIndex != 0)
+            if (activeTabIndex != 0)
             {
                 if (compare)
                 {

@@ -1,6 +1,4 @@
 ﻿using System.Text.Json.Serialization;
-using YamlDotNet.Core;
-using YamlDotNet.Serialization;
 
 namespace Expandroid.Models
 {
@@ -27,7 +25,7 @@ namespace Expandroid.Models
         {
             Trigger = og.Trigger;
             Replace = og.Replace;
-            Vars = new(og.Vars);
+            Vars = [.. og.Vars];
             Word = og.Word;
             Form = og.Form;
             Form_Fields = og.Form_Fields;

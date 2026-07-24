@@ -20,7 +20,7 @@ public class ConfigImportReceiver : BroadcastReceiver
     //};
     private void SendMessage(string cmd, Match value)
     {
-        WeakReferenceMessenger.Default.Send(new AcServiceMessage((cmd, value)));
+        _ = WeakReferenceMessenger.Default.Send(new AcServiceMessage((cmd, value)));
     }
     public override void OnReceive(Context context, Intent intent)
     {
@@ -32,21 +32,21 @@ public class ConfigImportReceiver : BroadcastReceiver
             //var packages = pm.GetPackagesForUid(callingUid);
             //if (packages == null || !packages.Any(pkg => AllowedPackages.Contains(pkg)))
             //    return;
-            var configStr = intent.GetStringExtra("config_string");
+            string configStr = intent.GetStringExtra("config_string");
             if (!string.IsNullOrEmpty(configStr))
             {
                 try
                 {
-                    var deserializer = new DeserializerBuilder()
+                    IDeserializer deserializer = new DeserializerBuilder()
                                 .WithNamingConvention(UnderscoredNamingConvention.Instance).IgnoreUnmatchedProperties()
                                 .Build();
-                    var localDict = deserializer.Deserialize<DictWrapper>(configStr);
-                    foreach (var item in localDict.Matches)
+                    DictWrapper localDict = deserializer.Deserialize<DictWrapper>(configStr);
+                    foreach (Match item in localDict.Matches)
                     {
                         if (item.Vars is not null)
                         {
                             bool notSupported = item.Replace is null;
-                            foreach (var x in item.Vars)
+                            foreach (Var x in item.Vars)
                             {
                                 if (x.Type is not null)
                                 {
@@ -69,32 +69,34 @@ public class ConfigImportReceiver : BroadcastReceiver
                                 }
                             }
                             if (notSupported)
+                            {
                                 continue;
+                            }
                         }
                     }
                     if (localDict.Global_vars is not null)
                     {
-                        var str = JsonSerializer.Serialize(localDict.Global_vars);
+                        string str = JsonSerializer.Serialize(localDict.Global_vars);
                         File.WriteAllText(AppSettings.GlobalVarsPath, str);
-                        WeakReferenceMessenger.Default.Send(new AcGlobalsMessage(localDict.Global_vars));
+                        _ = WeakReferenceMessenger.Default.Send(new AcGlobalsMessage(localDict.Global_vars));
                     }
-                    Dictionary<string, Match> dict = new();
-                    foreach (var match in localDict.Matches)
+                    Dictionary<string, Match> dict = [];
+                    foreach (Match match in localDict.Matches)
                     {
                         dict.Add(match.Trigger, match);
                     }
-                    var jsonStr = JsonSerializer.Serialize(dict);
+                    string jsonStr = JsonSerializer.Serialize(dict);
                     File.WriteAllText(AppSettings.DictPath, jsonStr);
                     SendMessage("Reset", new Match());
-                    Intent resultIntent = new Intent("com.dingleinc.texttoolspro.CONFIG_RESULT");
-                    resultIntent.PutExtra("status", 0); // or 1 for failure
+                    Intent resultIntent = new("com.dingleinc.texttoolspro.CONFIG_RESULT");
+                    _ = resultIntent.PutExtra("status", 0); // or 1 for failure
                     context.SendBroadcast(resultIntent);
 
                 }
                 catch (Exception e)
                 {
-                    Intent resultIntent = new Intent("com.dingleinc.texttoolspro.CONFIG_RESULT");
-                    resultIntent.PutExtra("status", e.Message); // or 1 for failure
+                    Intent resultIntent = new("com.dingleinc.texttoolspro.CONFIG_RESULT");
+                    _ = resultIntent.PutExtra("status", e.Message); // or 1 for failure
                     context.SendBroadcast(resultIntent);
                 }
             }
