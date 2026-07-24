@@ -41,7 +41,7 @@
                 <MudButton @onclick="AddItemAsync" Color="Color.Primary" Variant="Variant.Text">Add</MudButton>
             </div>
             <MudPaper class="mt-2">
-                <MudList Clickable="false">
+                <MudList Clickable="false" T="Var">
                     <MudListSubheader>
                         Variables:
                         <MudChip Color="Color.Secondary">
@@ -217,13 +217,13 @@
 
 @code {
     List<string> textList = new();
-    bool compare = true;
-    bool ignoreCase = false;
-    bool processing = false;
-    bool compareResult = false;
-    bool lengthCompare = false;
-    bool lengthCompareResult = false;
-    bool contains = false;
+    public bool compare { get; set; } = true;
+    public bool ignoreCase { get; set; } = false;
+    public bool processing { get; set; } = false;
+    public bool compareResult { get; set; } = false;
+    public bool lengthCompare { get; set; } = false;
+    public bool lengthCompareResult { get; set; } = false;
+    public bool contains { get; set; } = false;
     string containsText = string.Empty;
     bool containsResult = false;
     int index = 1;
@@ -234,7 +234,7 @@
     bool toLower = false;
     ulong processCount = 0;
     public MudTabs Tabs;
-    bool makeBold = true;
+    bool makeBold = false;
     bool makeItalic = false;
     bool makeStrike = false;
     bool makeCode = false;
@@ -266,7 +266,7 @@
                         Type = "date",
                         Params = new()
                         {
-                            Format = "dd/MM/yyyy"
+                            Format = "MM/dd/yyyy"
                         }
                     });
                 currentMatch.Replace += " {{datenow}}";
@@ -348,6 +348,20 @@
                 await dialogService.DisplayConfirmAsync("Migrated successfully!", "All your data in cache has been moved to app data directory instead successfully!");
             }
         }
+        ImportConfigFromFile();
+        WeakReferenceMessenger.Default.Register<AcServiceMessage>(this, (r, m) =>
+        {
+            var cmd = m.Value.Item1;
+            var item = m.Value.Item2;
+            if (cmd == "Reset")
+            {
+                ImportConfigFromFile();
+                StateHasChanged();
+            }
+        });
+    }
+    private void ImportConfigFromFile()
+    {
         if (File.Exists(AppSettings.DictPath))
         {
             using var stream = File.OpenRead(AppSettings.DictPath);
@@ -421,7 +435,7 @@
                                 {
                                     try
                                     {
-                                        x.Params.Format = GetTheRealFormat(x.Params.Format);
+                                        x.Params.Format = Utils.GetTheRealFormat(x.Params.Format);
                                     }
                                     catch (Exception)
                                     {
@@ -473,7 +487,7 @@
                         {
                             if (x.Type == "date")
                             {
-                                x.Params.Format = GetOriginalFormat(x.Params.Format);
+                                x.Params.Format = Utils.GetOriginalFormat(x.Params.Format);
                             }
                         }
                     }
@@ -520,7 +534,7 @@
         Var copy = new(currentVar) { Params = new(currentVar.Params) };
         if (!string.IsNullOrEmpty(copy.Params.Format))
         {
-            copy.Params.Format = GetTheRealFormat(copy.Params.Format);
+            copy.Params.Format = Utils.GetTheRealFormat(copy.Params.Format);
         }
         currentMatch.Vars.Add(copy);
     }
@@ -626,7 +640,7 @@
         processCount++;
         try
         {
-            if (Tabs.ActivePanelIndex == 0)
+            if (Tabs.ActivePanelIndex != 0)
             {
                 if (compare)
                 {
@@ -653,9 +667,6 @@
                 {
                     textList[index - 1] = textList[index - 1].ToLower();
                 }
-            }
-            else
-            {
                 if (makeBold)
                 {
                     textList[index - 1] = "**" + textList[index - 1] + "**";
@@ -696,54 +707,7 @@
         }
         processing = false;
     }
-    private static string GetTheRealFormat(string format)
-    {
-        format = format.Replace("%Y", "yyyy");
-        format = format.Replace("%m", "MM");
-        format = format.Replace("%b", "MMM");
-        format = format.Replace("%B", "MMMM");
-        format = format.Replace("%h", "MMM");
-        format = format.Replace("%d", "dd");
-        format = format.Replace("%e", "d");
-        format = format.Replace("%a", "ddd");
-        format = format.Replace("%A", "dddd");
-        format = format.Replace("%j", DateTime.Now.DayOfYear.ToString());
-        format = format.Replace("%w", DateTime.Now.DayOfWeek.ToString());
-        format = format.Replace("%u", (DateTime.Now.DayOfWeek + 1).ToString());
-        format = format.Replace("%D", "MM/dd/yyyy");
-        format = format.Replace("%F", "yyyy/MM/dd");
-        format = format.Replace("%H", "HH");
-        format = format.Replace("%I", "hh");
-        format = format.Replace("%p", "tt");
-        format = format.Replace("%M", "mm");
-        format = format.Replace("%S", "ss");
-        format = format.Replace("%R", "HH:mm");
-        format = format.Replace("%T", "HH:mm:ss");
-        format = format.Replace("%r", "hh:mm:ss tt");
-        return format;
-    }
-    private static string GetOriginalFormat(string format)
-    {
-        format = format.Replace("yyyy", "%Y");
-        format = format.Replace("MM", "%m");
-        format = format.Replace("MMM", "%b");
-        format = format.Replace("MMMM", "%B");
-        format = format.Replace("dd", "%d");
-        format = format.Replace("d", "%e");
-        format = format.Replace("ddd", "%a");
-        format = format.Replace("dddd", "%A");
-        format = format.Replace("MM/dd/yyyy", "%D");
-        format = format.Replace("yyyy/MM/dd", "%F");
-        format = format.Replace("HH", "%H");
-        format = format.Replace("hh", "%I");
-        format = format.Replace("tt", "%p");
-        format = format.Replace("mm", "%M");
-        format = format.Replace("ss", "%S");
-        format = format.Replace("HH:mm", "%R");
-        format = format.Replace("HH:mm:ss", "%T");
-        format = format.Replace("hh:mm:ss tt", "%r");
-        return format;
-    }
+    
 
     private void EditItem(KeyValuePair<string, Match> item)
     {
