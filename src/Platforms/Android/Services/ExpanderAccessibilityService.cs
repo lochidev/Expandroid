@@ -115,35 +115,51 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                 return;
             }
 
-            // 1. Mark that we received an event from this package so the watcher backs off
-            _lastEventTimes[packageName] = DateTime.UtcNow;
-
-            AccessibilityNodeInfo node = e.Source;
+            bool isRelevantTextEvent = false;
 
             // --------------------------------------------------
-            // NORMAL FAST PATH
+            // CHECK EVENT SOURCE FOR EDITTEXT
             // --------------------------------------------------
-            if (node != null)
+            using (AccessibilityNodeInfo node = e.Source)
             {
-                string className = node.ClassName?.ToString();
-
-                bool isEditText =
-                    !string.IsNullOrEmpty(className) &&
-                    className.Contains("EditText") &&
-                    node.Editable;
-
-                if (isEditText)
+                if (node != null)
                 {
-                    string expansionStr = node.Text?.ToString();
+                    string className = node.ClassName?.ToString();
 
-                    if (!string.IsNullOrWhiteSpace(expansionStr))
+                    bool isEditText =
+                        !string.IsNullOrEmpty(className) &&
+                        className.Contains("EditText") &&
+                        node.Editable;
+
+                    if (isEditText)
                     {
-                        await HandleTextExpansionAsync(e, expansionStr);
-                    }
+                        isRelevantTextEvent = true;
+                        string expansionStr = node.Text?.ToString();
 
-                    // If we handled it natively, we just return. Watcher is still alive but sleeping.
-                    return;
+                        if (!string.IsNullOrWhiteSpace(expansionStr))
+                        {
+                            await HandleTextExpansionAsync(e, expansionStr);
+                        }
+
+                        // If handled natively, we return. Watcher stays alive but sleeps.
+                        // Update timestamp because this was a verified typing event.
+                        _lastEventTimes[packageName] = DateTime.UtcNow;
+                        return;
+                    }
                 }
+            }
+
+            // Catch other text-centric native events (like text changes or focus shifts inside text fields)
+            if (e.EventType == EventTypes.ViewTextChanged ||
+                e.EventType == EventTypes.ViewTextTraversedAtMovementGranularity ||
+                e.EventType == EventTypes.ViewFocused)
+            {
+                isRelevantTextEvent = true;
+            }
+
+            if (isRelevantTextEvent)
+            {
+                _lastEventTimes[packageName] = DateTime.UtcNow;
             }
 
             // --------------------------------------------------
