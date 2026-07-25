@@ -131,11 +131,11 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                         className.Contains("EditText") &&
                         node.Editable;
 
+                    isRelevantTextEvent = isEditText;
                     if (isEditText)
                     {
-                        isRelevantTextEvent = true;
+                        _lastEventTimes[packageName] = DateTime.UtcNow;
                         string expansionStr = node.Text?.ToString();
-
                         if (!string.IsNullOrWhiteSpace(expansionStr))
                         {
                             await HandleTextExpansionAsync(e, expansionStr);
@@ -143,7 +143,6 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
 
                         // If handled natively, we return. Watcher stays alive but sleeps.
                         // Update timestamp because this was a verified typing event.
-                        _lastEventTimes[packageName] = DateTime.UtcNow;
                         return;
                     }
                 }
