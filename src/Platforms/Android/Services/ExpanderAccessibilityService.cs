@@ -173,7 +173,8 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
 
         CancellationToken token = cts.Token;
         const int watcherDelayMs = 1000;
-
+        int additionalDelayMs = 1000;
+        const int maxAdditionalDelayMs = 5000;
         _ = Task.Run(async () =>
         {
             try
@@ -214,6 +215,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                         if (isSilent)
                         {
                             // FALLBACK TRIGGERED: App stopped sending native events
+                            additionalDelayMs = 1000; // Reset additional delay
                             if (!string.IsNullOrWhiteSpace(text))
                             {
                                 bool changed = !_lastKnownText.TryGetValue(packageName, out string last) || last != text;
@@ -234,6 +236,12 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                             // NATIVE IS WORKING: Just sync state so we don't accidentally fire
                             // old text if the app suddenly goes silent.
                             _lastKnownText[packageName] = text;
+                            //additional delay
+                            await Task.Delay(additionalDelayMs, token);
+                            if(additionalDelayMs < maxAdditionalDelayMs)
+                            {
+                                additionalDelayMs += 1000;
+                            }
                         }
                     }
 

@@ -15,7 +15,7 @@
     <ApplicationId>com.dingleinc.texttoolspro</ApplicationId>
     <ApplicationIdGuid>A9E98E65-AE83-5428-9AB1-578DC0552CB8</ApplicationIdGuid>
     <!-- Versions -->
-    <ApplicationDisplayVersion>7.2.0</ApplicationDisplayVersion>
+    <ApplicationDisplayVersion>7.3.0</ApplicationDisplayVersion>
     <ApplicationVersion>200027</ApplicationVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">14.2</SupportedOSPlatformVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">14.0</SupportedOSPlatformVersion>
