@@ -175,6 +175,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
         const int watcherDelayMs = 1000;
         int additionalDelayMs = 1000;
         const int maxAdditionalDelayMs = 5000;
+
         _ = Task.Run(async () =>
         {
             try
@@ -189,60 +190,68 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                         continue;
                     }
 
-                    // --------------------------------------------
-                    // CHECK IF THIS APP IS STILL FOREGROUND
-                    // --------------------------------------------
-                    string currentPackage = root.PackageName?.ToString();
-
-                    if (currentPackage != packageName)
+                    try
                     {
-                        break;
-                    }
+                        // --------------------------------------------
+                        // CHECK IF THIS APP IS STILL FOREGROUND
+                        // --------------------------------------------
+                        string currentPackage = root.PackageName?.ToString();
 
-                    // --------------------------------------------
-                    // TIMEOUT LOGIC & FIND CURRENTLY FOCUSED EDITTEXT
-                    // --------------------------------------------
-                    AccessibilityNodeInfo focused = FindFocusedEditText(root);
-
-                    if (focused != null)
-                    {
-                        string text = focused.Text?.ToString() ?? "";
-
-                        // Calculate time since the last native AccessibilityEvent
-                        DateTime lastEventTime = _lastEventTimes.TryGetValue(packageName, out DateTime time) ? time : DateTime.MinValue;
-                        bool isSilent = (DateTime.UtcNow - lastEventTime).TotalMilliseconds > SilentThresholdMs;
-
-                        if (isSilent)
+                        if (currentPackage != packageName)
                         {
-                            // FALLBACK TRIGGERED: App stopped sending native events
-                            additionalDelayMs = 1000; // Reset additional delay
-                            if (!string.IsNullOrWhiteSpace(text))
-                            {
-                                bool changed = !_lastKnownText.TryGetValue(packageName, out string last) || last != text;
+                            break;
+                        }
 
-                                if (changed)
+                        // --------------------------------------------
+                        // TIMEOUT LOGIC & FIND CURRENTLY FOCUSED EDITTEXT
+                        // --------------------------------------------
+                        using (AccessibilityNodeInfo focusedNode = FindFocusedEditText(root))
+                        {
+                            if (focusedNode != null)
+                            {
+                                string text = focusedNode.Text?.ToString() ?? "";
+
+                                // Calculate time since the last native AccessibilityEvent
+                                DateTime lastEventTime = _lastEventTimes.TryGetValue(packageName, out DateTime time) ? time : DateTime.MinValue;
+                                bool isSilent = (DateTime.UtcNow - lastEventTime).TotalMilliseconds > SilentThresholdMs;
+
+                                if (isSilent)
                                 {
+                                    // FALLBACK TRIGGERED: App stopped sending native events
+                                    additionalDelayMs = 1000; // Reset additional delay
+                                    if (!string.IsNullOrWhiteSpace(text))
+                                    {
+                                        bool changed = !_lastKnownText.TryGetValue(packageName, out string last) || last != text;
+
+                                        if (changed)
+                                        {
+                                            _lastKnownText[packageName] = text;
+                                            await HandleTextExpansionAsync(triggerEvent, text);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        _lastKnownText[packageName] = "";
+                                    }
+                                }
+                                else
+                                {
+                                    // NATIVE IS WORKING: Just sync state so we don't accidentally fire
+                                    // old text if the app suddenly goes silent.
                                     _lastKnownText[packageName] = text;
-                                    await HandleTextExpansionAsync(triggerEvent, text);
+                                    // Additional delay
+                                    await Task.Delay(additionalDelayMs, token);
+                                    if (additionalDelayMs < maxAdditionalDelayMs)
+                                    {
+                                        additionalDelayMs += 1000;
+                                    }
                                 }
                             }
-                            else
-                            {
-                                _lastKnownText[packageName] = "";
-                            }
                         }
-                        else
-                        {
-                            // NATIVE IS WORKING: Just sync state so we don't accidentally fire
-                            // old text if the app suddenly goes silent.
-                            _lastKnownText[packageName] = text;
-                            //additional delay
-                            await Task.Delay(additionalDelayMs, token);
-                            if(additionalDelayMs < maxAdditionalDelayMs)
-                            {
-                                additionalDelayMs += 1000;
-                            }
-                        }
+                    }
+                    finally
+                    {
+                        root.Dispose();
                     }
 
                     await Task.Delay(watcherDelayMs, token);
@@ -253,7 +262,6 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
             }
             catch (Exception)
             {
-
             }
             finally
             {
@@ -284,15 +292,29 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
 
             if (isEditText && isFocused)
             {
-                return node;
+                return node; // Caller takes ownership and must dispose this node
             }
 
-            for (int i = 0; i < node.ChildCount; i++)
+            int childCount = node.ChildCount;
+            for (int i = 0; i < childCount; i++)
             {
-                AccessibilityNodeInfo result = FindFocusedEditText(node.GetChild(i));
-                if (result != null)
+                AccessibilityNodeInfo child = node.GetChild(i);
+                if (child != null)
                 {
-                    return result;
+                    AccessibilityNodeInfo result = FindFocusedEditText(child);
+                    if (result != null)
+                    {
+                        // If result is a deeper child, dispose the intermediate parent wrapper
+                        if (result != child)
+                        {
+                            child.Dispose();
+                        }
+                        return result;
+                    }
+                    else
+                    {
+                        child.Dispose();
+                    }
                 }
             }
         }
@@ -530,29 +552,30 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
     private void DoExpansion(AccessibilityEvent e, string og)
     {
         AccessibilityNodeInfo node = e?.Source;
+        AccessibilityNodeInfo root = null;
 
-        // --------------------------------------------------
-        // FALLBACK: if Source is null, scan full root tree
-        // --------------------------------------------------
-        if (node == null)
+        try
         {
-            AccessibilityNodeInfo root = RootInActiveWindow;
+            // --------------------------------------------------
+            // FALLBACK: if Source is null, scan full root tree
+            // --------------------------------------------------
+            if (node == null)
+            {
+                root = RootInActiveWindow;
 
-            if (root == null)
+                if (root == null)
+                {
+                    return;
+                }
+
+                node = FindFocusedEditText(root);
+            }
+
+            if (node == null)
             {
                 return;
             }
 
-            node = FindFocusedEditText(root);
-        }
-
-        if (node == null)
-        {
-            return;
-        }
-
-        try
-        {
             // --------------------------------------------------
             // SET TEXT
             // --------------------------------------------------
@@ -578,9 +601,14 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                     CursorArgs);
             }
         }
-        catch (Exception ex)
+        catch (Exception)
         {
-            _ = Android.Util.Log.Error("A11Y", $"DoExpansion error: {ex}");
+        }
+        finally
+        {
+            // Crucial: Prevent JNI leaks by disposing nodes allocated in this scope
+            node?.Dispose();
+            root?.Dispose();
         }
     }
 

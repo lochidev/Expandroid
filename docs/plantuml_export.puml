@@ -1,0 +1,138 @@
+@startuml
+title Expandroid Accessibility Service - Core Architecture & Flow
+
+skinparam DefaultTextAlignment center
+skinparam ArrowColor #1A202C
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityBorderColor #1A202C
+skinparam ActivityRoundCorner 8
+skinparam PartitionBackgroundColor #F7FAFC
+skinparam PartitionBorderColor #4A5568
+skinparam PartitionFontColor #1A202C
+skinparam NoteBackgroundColor #FEFCBF
+skinparam NoteBorderColor #D69E2E
+skinparam Nodesep 30
+skinparam Ranksep 25
+
+start
+
+:Accessibility event received;
+
+if (Event valid & package allowed?) then (Yes)
+    :Extract package name;
+    :Update last event timestamp;
+
+    if (Source is editable EditText?) then (Yes)
+        :Read current text;
+        if (Text not empty?) then (Yes)
+            :HandleTextExpansionAsync(triggerEvent, text);
+        endif
+        stop
+    else (No)
+        :Start Package Watcher (Polling Fallback);
+    endif
+else (No)
+    stop
+endif
+
+partition "Package Watcher (Background Loop)" {
+while (Watcher active & token not canceled?)
+    :Get RootInActiveWindow;
+
+    if (Root exists?) then (Yes)
+        :Verify same foreground package;
+    else (No)
+        :Wait watcher delay (1s);
+        
+    endif
+
+    if (Same package as target?) then (Yes)
+        :Find focused EditText (with safe JNI child recycling);
+
+        if (EditText found?) then (Yes)
+            :Read current text;
+
+            if (App silent / event stream stalled?) then (Yes)
+                if (Text changed from last known?) then (Yes)
+                    :HandleTextExpansionAsync(triggerEvent, text);
+                endif
+            else (No)
+                :Synchronize cached text;
+                :Increase polling backoff delay;
+            endif
+        endif
+        
+        :Wait watcher delay (1s);
+    else (No)
+        break
+    endif
+
+endwhile
+
+:Cleanup watcher state & dictionaries;
+}
+
+partition "HandleTextExpansionAsync" {
+:Update cursor information & extract word;
+
+if (Duplicate event?) then (Yes)
+    stop
+endif
+
+if (Pending form expansion?) then (Yes)
+    :Insert completed form;
+    :Mark expansion;
+else (No)
+    if (Undo expansion?) then (Yes)
+        :Restore original text;
+        :Mark expansion;
+    else (No)
+        if (Skip form event?) then (Yes)
+            stop
+        endif
+
+        :Lookup trigger;
+
+        if (Trigger found?) then (Yes)
+            :Validate word boundaries;
+
+            if (Trigger contains form?) then (Yes)
+                :Display form overlay;
+                stop
+            else (No)
+                :Expand global & local variables;
+                :Prepare replacement text;
+                :Mark expansion;
+            endif
+        endif
+    endif
+endif
+
+if (Expansion required?) then (Yes)
+    :DoExpansion(triggerEvent, expandedText);
+endif
+
+stop
+}
+
+partition "DoExpansion" {
+:Check event source (e?.Source);
+
+if (Source node available?) then (Yes)
+    ' Node acquired directly from event
+else (No)
+    :Fetch RootInActiveWindow fallback;
+    :Traverse & find focused EditText;
+endif
+
+if (Target node available?) then (Yes)
+    :Set text action via arguments;
+    :Refresh node hierarchy;
+    :Restore cursor selection position;
+endif
+
+:Ensure safe node disposal (Prevent JNI leaks);
+stop
+}
+
+@enduml
