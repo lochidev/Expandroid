@@ -98,7 +98,16 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
 
     // Threshold before the watcher takes over (in milliseconds)
     private const double SilentThresholdMs = 1500;
+    private void ShowTemporaryForm()
+    {
+        windowManager.AddView(floatView, layoutParams);
+    }
 
+    private void RemoveTemporaryForm()
+    {
+        windowManager.RemoveView(floatView);
+        rowContainer.RemoveAllViewsInLayout();
+    }
     public override async void OnAccessibilityEvent(AccessibilityEvent e)
     {
         try
@@ -287,55 +296,84 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
         }, token);
     }
 
-    private AccessibilityNodeInfo FindFocusedEditText(AccessibilityNodeInfo node)
+    private AccessibilityNodeInfo FindFocusedEditText(AccessibilityNodeInfo root)
     {
-        if (node == null)
-        {
+        if (root == null)
             return null;
-        }
 
         try
         {
-            string className = node.ClassName?.ToString();
+            // 1. Best case: ask Android directly for the input-focused node.
+            AccessibilityNodeInfo focused = root.FindFocus(NodeFocus.Input);
 
-            bool isEditText =
-                !string.IsNullOrEmpty(className) &&
-                className.Contains("EditText") &&
-                node.Editable;
-
-            bool isFocused = node.Focused || node.AccessibilityFocused;
-
-            if (isEditText && isFocused)
+            if (focused != null)
             {
-                return node; // Caller takes ownership and must dispose this node
+                string className = focused.ClassName?.ToString();
+
+                bool isEditText =
+                    !string.IsNullOrEmpty(className) &&
+                    className.Contains("EditText") &&
+                    focused.Editable;
+
+                if (isEditText)
+                {
+                    return focused;
+                }
+
+                focused.Dispose();
             }
 
-            int childCount = node.ChildCount;
-            for (int i = 0; i < childCount; i++)
+            // 2. Fallback: iterative DFS through the accessibility tree.
+            var stack = new Stack<AccessibilityNodeInfo>();
+            stack.Push(root);
+
+            while (stack.Count > 0)
             {
-                AccessibilityNodeInfo child = node.GetChild(i);
-                if (child != null)
+                AccessibilityNodeInfo node = stack.Pop();
+
+                try
                 {
-                    AccessibilityNodeInfo result = FindFocusedEditText(child);
-                    if (result != null)
+                    string className = node.ClassName?.ToString();
+
+                    bool isEditText =
+                        !string.IsNullOrEmpty(className) &&
+                        className.Contains("EditText") &&
+                        node.Editable;
+
+                    bool isFocused =
+                        node.Focused ||
+                        node.AccessibilityFocused;
+
+                    if (isEditText && isFocused)
                     {
-                        // If result is a deeper child, dispose the intermediate parent wrapper
-                        if (result != child)
+                        return node;
+                    }
+
+                    // Reverse push order so the first child is examined first.
+                    for (int i = node.ChildCount - 1; i >= 0; i--)
+                    {
+                        AccessibilityNodeInfo child = node.GetChild(i);
+
+                        if (child != null)
                         {
-                            child.Dispose();
+                            stack.Push(child);
                         }
-                        return result;
                     }
-                    else
-                    {
-                        child.Dispose();
-                    }
+                }
+                catch
+                {
+                    // Ignore inaccessible/broken nodes.
+                }
+
+                if (node != root)
+                {
+                    node.Dispose();
                 }
             }
         }
         catch
         {
-            // ignore broken nodes (YouTube / Compose apps)
+            // Ignore failures caused by changing accessibility trees.
         }
 
         return null;
@@ -659,7 +697,7 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
         }
     }
 
-    private static async Task<string> ParseItemAsync(Var item, string replace)
+    private async Task<string> ParseItemAsync(Var item, string replace)
     {
         try
         {
@@ -677,8 +715,10 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
                     case "clipboard":
                         //if (Clipboard.Default.HasText)
                         {
-                            string clip = await Clipboard.Default.GetTextAsync();
+                            ShowTemporaryForm();
+                            var clip = await Clipboard.Default.GetTextAsync();
                             replace = replace.Replace(WrapName(item.Name), clip);
+                            RemoveTemporaryForm();
                         }
                         break;
                     case "date":
@@ -741,11 +781,17 @@ public class ExpanderAccessibilityservice : AccessibilityService, Android.Views.
 
     public override bool OnUnbind(Intent intent)
     {
-        //Remove the overlay when the service is unbound
-        if (floatView != null)
+        try
         {
-            IWindowManager windowManager = (IWindowManager)GetSystemService(Context.WindowService);
-            windowManager.RemoveView(floatView);
+            if (floatView != null && GetSystemService(Context.WindowService) is IWindowManager windowManager)
+            {
+                windowManager.RemoveView(floatView);
+                floatView = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Android.Util.Log.Warn("Expandroid", $"OnUnbind cleanup failed: {ex}");
         }
         return base.OnUnbind(intent);
     }
